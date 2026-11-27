@@ -25,8 +25,8 @@ describe.each(stubs.phpUnit)('PHPUnit $name ($phpUnitVersion)', ({ root, binary,
             const fakeData: FileCoverageData[] = [
                 { filePath: join(root, 'src/Foo.php'), covered: 1, total: 2, lines: [] },
             ];
-            const parseCloverSpy = vi
-                .spyOn(CloverParser.prototype, 'parseClover')
+            const parseFileSpy = vi
+                .spyOn(CloverParser.prototype, 'parseFile')
                 .mockResolvedValue(fakeData);
 
             const extension = await activateExtension(context);
@@ -54,11 +54,11 @@ describe.each(stubs.phpUnit)('PHPUnit $name ($phpUnitVersion)', ({ root, binary,
                 });
             });
 
-            expect(parseCloverSpy).toHaveBeenCalledTimes(2);
-            expect(parseCloverSpy.mock.calls[0][0]).toMatch(
+            expect(parseFileSpy).toHaveBeenCalledTimes(2);
+            expect(parseFileSpy.mock.calls[0][0]).toMatch(
                 /\.phpunit\.cache[/\\]coverage-.+-0\.xml$/,
             );
-            expect(parseCloverSpy.mock.calls[1][0]).toMatch(
+            expect(parseFileSpy.mock.calls[1][0]).toMatch(
                 /\.phpunit\.cache[/\\]coverage-.+-1\.xml$/,
             );
 

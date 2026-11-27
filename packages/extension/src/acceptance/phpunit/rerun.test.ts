@@ -97,7 +97,7 @@ describe.each(stubs.phpUnit)('PHPUnit $name ($phpUnitVersion)', ({ root, binary,
         });
 
         it('phpunit.rerun keeps the coverage profile of the previous run', async () => {
-            vi.spyOn(CloverParser.prototype, 'parseClover').mockResolvedValue([]);
+            vi.spyOn(CloverParser.prototype, 'parseFile').mockResolvedValue([]);
 
             const extension = await activateExtension(context);
             const { controller } = extension;

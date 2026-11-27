@@ -67,7 +67,7 @@ export class TestRunnerProcess {
             return [];
         }
 
-        const data = await new CloverParser().parseClover(cloverFile);
+        const data = await new CloverParser().parseFile(cloverFile);
         await rm(cloverFile, { force: true });
 
         return data.map((d) => ({
