@@ -1,6 +1,6 @@
 import type { AstNode, CallNode } from '../../../AstParser/AstNode';
+import { MAX_ITERATIONS } from '../../ControlFlow/LoopBodyExecutor';
 import type { Context, Expression } from '../../Expression';
-import { MAX_ITERATIONS } from '../../Statements/LoopBodyExecutor';
 
 class RangeExpression implements Expression<Map<string, unknown>> {
     supports(node: AstNode): boolean {

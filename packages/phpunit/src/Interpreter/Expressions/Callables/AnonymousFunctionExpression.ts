@@ -1,6 +1,6 @@
 import type { AstNode, BlockNode } from '../../AstParser/AstNode';
+import { resolveCompoundBody } from '../ControlFlow/CompoundStatementExpression';
 import type { Context, Expression } from '../Expression';
-import { resolveCompoundBody } from './CompoundStatementExpression';
 
 class AnonymousFunctionExpression implements Expression<unknown> {
     supports(node: AstNode): boolean {

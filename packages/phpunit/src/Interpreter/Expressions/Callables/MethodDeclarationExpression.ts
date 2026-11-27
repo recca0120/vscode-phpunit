@@ -1,6 +1,6 @@
 import type { AstNode, MethodNode } from '../../AstParser/AstNode';
+import { resolveCompoundBody } from '../ControlFlow/CompoundStatementExpression';
 import type { Context, Expression } from '../Expression';
-import { resolveCompoundBody } from './CompoundStatementExpression';
 
 class MethodDeclarationExpression implements Expression<unknown> {
     supports(node: AstNode): boolean {
