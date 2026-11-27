@@ -36,6 +36,13 @@ export class PHPUnitXML {
         return this;
     }
 
+    unload() {
+        this.element = undefined;
+        this._file = '';
+
+        return this;
+    }
+
     setRoot(root: string) {
         this.cached.clear();
         this._configRoot = root;

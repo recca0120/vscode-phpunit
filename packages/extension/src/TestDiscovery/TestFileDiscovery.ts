@@ -108,7 +108,7 @@ export class TestFileDiscovery {
         if (configurationFile) {
             await this.phpUnitXML.loadFile(configurationFile);
         } else {
-            this.phpUnitXML.setRoot(this.workspaceFolder.uri.fsPath);
+            this.phpUnitXML.unload().setRoot(this.workspaceFolder.uri.fsPath);
         }
 
         this.loaded = true;
