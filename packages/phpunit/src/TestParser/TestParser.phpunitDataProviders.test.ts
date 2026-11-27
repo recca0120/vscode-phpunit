@@ -385,6 +385,21 @@ class NestedLoopProviderTest extends TestCase
             );
         });
 
+        it('uses an element of the looped array row as the data set key', () => {
+            expect(
+                givenProviderTest(
+                    "foreach ([['a', 1], ['b', 2]] as $row) { yield $row[0] => [$row[1]]; }",
+                ),
+            ).toEqual(
+                expect.objectContaining({
+                    annotations: {
+                        dataProvider: ['provider'],
+                        dataset: ['data set "a"', 'data set "b"'],
+                    },
+                }),
+            );
+        });
+
         it('loop yielding integer keys is renumbered like PHPUnit', () => {
             expect(givenProviderTest('for ($i = 5; $i < 7; $i++) { yield $i => [$i]; }')).toEqual(
                 expect.objectContaining({

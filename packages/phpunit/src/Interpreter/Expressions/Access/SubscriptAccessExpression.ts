@@ -11,6 +11,10 @@ class SubscriptAccessExpression implements Expression<unknown> {
         const obj = context.resolve(object);
         const idx = context.resolve(index);
 
+        if (obj instanceof Map && (typeof idx === 'number' || typeof idx === 'string')) {
+            return obj.get(String(idx));
+        }
+
         if ((typeof obj === 'string' || Array.isArray(obj)) && typeof idx === 'number') {
             return obj[idx];
         }
