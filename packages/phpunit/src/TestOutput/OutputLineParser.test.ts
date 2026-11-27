@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { phpUnitProject } from '../../tests/support/fixtures';
 import { phpUnitProjectWin } from '../../tests/support/windowsPath';
-import { TeamcityLineParser } from './TeamcityLineParser';
+import { OutputLineParser } from './OutputLineParser';
 import { TeamcityEvent } from './types';
 
-describe('TeamcityLineParser', () => {
+describe('OutputLineParser', () => {
     const parse = (text: string) => {
-        return new TeamcityLineParser().parse(text);
+        return new OutputLineParser().parse(text);
     };
 
     it('parse phpunit version', () => {

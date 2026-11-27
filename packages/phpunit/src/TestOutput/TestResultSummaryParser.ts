@@ -1,8 +1,8 @@
 import { camelCase } from '../utils';
+import type { LineParser } from './LineParser';
 import { TeamcityEvent, type TestResultSummary } from './types';
-import type { IParser } from './ValueParser';
 
-export class TestResultSummaryParser implements IParser<TestResultSummary> {
+export class TestResultSummaryParser implements LineParser<TestResultSummary> {
     private readonly pattern = (() => {
         const items = [
             'Error(s)?',

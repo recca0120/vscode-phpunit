@@ -1,4 +1,6 @@
 import { TestIdentifierFactory } from '../TestIdentifier/TestIdentifierFactory';
+import { LabeledValueParser } from './LabeledValueParser';
+import type { LineParser } from './LineParser';
 import type { Teamcity } from './parseTeamcity';
 import { parseTeamcity } from './parseTeamcity';
 import { TestDurationParser } from './TestDurationParser';
@@ -11,16 +13,15 @@ import {
     type TestResult,
     type TestRuntime,
 } from './types';
-import { type IParser, ValueParser } from './ValueParser';
 
-export class TeamcityLineParser implements IParser<TestResult | undefined> {
+export class OutputLineParser implements LineParser<TestResult | undefined> {
     private readonly pattern = /^.*#+teamcity/;
     private readonly filePattern = /(\s+)?(?<file>.+):(?<line>\d+)$/;
     private readonly parsers = [
         new TestVersionParser(),
-        new ValueParser<TestRuntime>('Runtime', TeamcityEvent.testRuntime),
-        new ValueParser<TestConfiguration>('Configuration', TeamcityEvent.testConfiguration),
-        new ValueParser<TestProcesses>('Processes', TeamcityEvent.testProcesses),
+        new LabeledValueParser<TestRuntime>('Runtime', TeamcityEvent.testRuntime),
+        new LabeledValueParser<TestConfiguration>('Configuration', TeamcityEvent.testConfiguration),
+        new LabeledValueParser<TestProcesses>('Processes', TeamcityEvent.testProcesses),
         new TestDurationParser(),
         new TestResultSummaryParser(),
     ];

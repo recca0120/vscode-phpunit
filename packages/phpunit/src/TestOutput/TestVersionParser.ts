@@ -1,7 +1,7 @@
+import type { LineParser } from './LineParser';
 import { TeamcityEvent, type TestVersion } from './types';
-import type { IParser } from './ValueParser';
 
-export class TestVersionParser implements IParser<TestVersion> {
+export class TestVersionParser implements LineParser<TestVersion> {
     private pattern = /^(ParaTest\s(v)?(?<paratest>[\d.]+).+)?PHPUnit\s(?<phpunit>[\d.]+)/i;
 
     is(text: string): boolean {
