@@ -431,6 +431,23 @@ describe('PHPUnit XML in subdirectory (../tests)', () => {
     const parentRoot = phpUnitProject('');
     const phpUnitXML = new PHPUnitXML();
 
+    it('resolves root to the parent for a ../ directory in a sibling folder sharing its prefix', () => {
+        const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         bootstrap="vendor/autoload.php"
+>
+    <testsuites>
+        <testsuite name="default">
+            <directory>../v10/tests</directory>
+        </testsuite>
+    </testsuites>
+</phpunit>`;
+
+        phpUnitXML.load(xml, phpUnitProject('v1/phpunit.xml'));
+
+        expect(phpUnitXML.root()).toEqual(parentRoot);
+    });
+
     it('should resolve root to parent when test directories use ../', () => {
         const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
