@@ -2,7 +2,7 @@ import type { SpawnOptions } from 'node:child_process';
 import type { IConfiguration } from '../Configuration';
 import type { PathMapper, PathResolver } from '../Path';
 import { cloneInstance } from '../utils';
-import { CommandTemplateEnvironment, type Environment } from './Environment';
+import { type CommandLauncher, TemplateCommandLauncher } from './CommandLauncher';
 import { type Arg, type Invocation, intactArg, pathArg } from './Invocation';
 import type { CommandOption } from './Option/CommandOption';
 import { XdebugCoverage } from './Option/XdebugCoverage';
@@ -53,7 +53,7 @@ export class TestCommand {
     }
 
     build() {
-        return this.environment().launch(this.invocation());
+        return this.launcher().toSpawnSpec(this.invocation());
     }
 
     toString() {
@@ -66,8 +66,8 @@ export class TestCommand {
         return cloneInstance(this);
     }
 
-    private environment(): Environment {
-        return new CommandTemplateEnvironment(
+    private launcher(): CommandLauncher {
+        return new TemplateCommandLauncher(
             this.getConfigString('command'),
             this.pathResolver,
             (text) => this.pathResolver.resolveVariables(text),

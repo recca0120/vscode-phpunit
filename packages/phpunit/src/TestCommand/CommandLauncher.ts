@@ -4,9 +4,9 @@ import type { PathMapper } from '../Path/PathMapper';
 import type { Arg, Invocation } from './Invocation';
 import type { SpawnSpec } from './SpawnSpec';
 
-export interface Environment {
+export interface CommandLauncher {
     readonly paths: PathMapper;
-    launch(invocation: Invocation): SpawnSpec;
+    toSpawnSpec(invocation: Invocation): SpawnSpec;
 }
 
 type TemplateVariables = {
@@ -20,7 +20,7 @@ const RUNS_IN_SHELL = /^ssh|sh\s+-c/;
 const variable = (name: string) => `\${${name}}`;
 const intactArgToken = (index: number) => `__ARG_PLACEHOLDER_${index}__`;
 
-export class CommandTemplateEnvironment implements Environment {
+export class TemplateCommandLauncher implements CommandLauncher {
     private readonly runsInShell: boolean;
 
     constructor(
@@ -31,7 +31,7 @@ export class CommandTemplateEnvironment implements Environment {
         this.runsInShell = RUNS_IN_SHELL.test(template);
     }
 
-    launch(invocation: Invocation): SpawnSpec {
+    toSpawnSpec(invocation: Invocation): SpawnSpec {
         const intactArgs = new Map<string, string>();
         const variables: TemplateVariables = {
             php: this.quoteIfNeeded(this.paths.toRemote(invocation.php)),
