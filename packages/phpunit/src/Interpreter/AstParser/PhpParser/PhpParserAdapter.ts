@@ -193,7 +193,7 @@ function adaptNode(raw: RawNode): AstNode | undefined {
         case 'staticlookup':
             return {
                 kind: 'class_constant_access',
-                scope: extractName(raw.what?.name ?? raw.what),
+                scope: extractName(raw.what?.name ?? raw.what) || (raw.what?.raw ?? ''),
                 name: extractName(raw.offset?.name ?? raw.offset),
                 loc: convertLoc(raw.loc),
             };

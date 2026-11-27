@@ -94,16 +94,22 @@ function resolve(node: AstNode, context: Context): unknown {
     return undefined;
 }
 
-function createContext(bindings: Bindings, classBody?: AstNode[]): Context {
+function createContext(bindings: Bindings, classBody?: AstNode[], className?: string): Context {
     const context: Context = {
         bindings,
         classBody,
+        className,
         resolve: (node) => resolve(node, context),
-        fork: (b, cb = classBody) => createContext(b, cb),
+        fork: (b, cb = classBody) => createContext(b, cb, className),
     };
     return context;
 }
 
-export function evaluate(node: AstNode, bindings: Bindings = {}, classBody?: AstNode[]): unknown {
-    return createContext(bindings, classBody).resolve(node);
+export function evaluate(
+    node: AstNode,
+    bindings: Bindings = {},
+    classBody?: AstNode[],
+    className?: string,
+): unknown {
+    return createContext(bindings, classBody, className).resolve(node);
 }

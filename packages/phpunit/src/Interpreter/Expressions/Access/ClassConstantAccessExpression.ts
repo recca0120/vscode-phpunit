@@ -5,6 +5,9 @@ import type {
 } from '../../AstParser/AstNode';
 import type { Context, Expression } from '../Expression';
 
+const refersToOwnClass = (scope: string, className?: string) =>
+    scope === 'self' || scope === 'static' || scope.split('\\').pop() === className;
+
 class ClassConstantAccessExpression implements Expression<Map<string, unknown>> {
     supports(node: AstNode): boolean {
         return node.kind === 'class_constant_access';
@@ -16,6 +19,10 @@ class ClassConstantAccessExpression implements Expression<Map<string, unknown>> 
         }
 
         const cca = node as ClassConstantAccessNode;
+        if (!refersToOwnClass(cca.scope, context.className)) {
+            return undefined;
+        }
+
         const constDecl = context.classBody.find(
             (n): n is ConstDeclarationNode => n.kind === 'const_declaration' && n.name === cca.name,
         );
