@@ -206,6 +206,28 @@ describe('phpunit.xml and the files it points to', () => {
             await vi.waitFor(() => expect(filesOf(items)).toEqual([join(tmp, 'a/ATest.php')]));
         });
 
+        it('lists the tests as a start without phpunit.xml does once phpunit.xml is deleted', async () => {
+            await writeFiles({
+                'phpunit.xml': testsuite('a'),
+                'a/ATest.php': testCase('ATest'),
+                'b/BTest.php': testCase('BTest'),
+            });
+            await openWorkspace({ root: tmp, settings: { php: 'php' } });
+            const extension = await activateExtension(context);
+            await extension.resolve();
+            const { items } = extension.controller;
+            expect(filesOf(items)).toEqual([join(tmp, 'a/ATest.php')]);
+
+            await deleteFile('phpunit.xml');
+
+            await vi.waitFor(() =>
+                expect(filesOf(items).sort()).toEqual([
+                    join(tmp, 'a/ATest.php'),
+                    join(tmp, 'b/BTest.php'),
+                ]),
+            );
+        });
+
         it('reloads when composer.json changes', async () => {
             await writeFiles({
                 'phpunit.xml': testsuite('tests'),

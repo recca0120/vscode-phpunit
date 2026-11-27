@@ -1,5 +1,5 @@
 import { execSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
 import { platform, tmpdir } from 'node:os';
 import { basename, dirname, join, resolve } from 'node:path';
 import { defineConfig } from '@vscode/test-cli';
@@ -73,6 +73,39 @@ function detectPestStubs() {
         }
     });
 }
+
+function watchingWorkspace(name, files) {
+    const root = realpathSync(mkdtempSync(join(tmpdir(), `vsc-e2e-${name}-`)));
+    for (const [file, content] of Object.entries(files)) {
+        mkdirSync(dirname(join(root, file)), { recursive: true });
+        writeFileSync(join(root, file), content);
+    }
+
+    return root;
+}
+
+const testsuite = (directory) => `<?xml version="1.0" encoding="UTF-8"?>
+<phpunit>
+    <testsuites>
+        <testsuite name="default">
+            <directory>${directory}</directory>
+        </testsuite>
+    </testsuites>
+</phpunit>
+`;
+
+const testCase = (name) => `<?php
+
+use PHPUnit\\Framework\\TestCase;
+
+class ${name} extends TestCase
+{
+    public function test_it_works(): void
+    {
+        $this->assertTrue(true);
+    }
+}
+`;
 
 const phpUnitStubs = detectPhpUnitStubs();
 const pestStubs = detectPestStubs();
@@ -177,6 +210,23 @@ if (pestStubs.length > 0) {
             ]),
             EXPECTED_TEST_COUNT: '1',
         },
+    });
+}
+
+if (phpUnitStubs.length > 0) {
+    const stub = phpUnitStubs.at(-1);
+    const phpunit = join(fixturesPath, 'phpunit-stub', stub.binary);
+    const root = watchingWorkspace('delete-configuration', {
+        'phpunit.xml': testsuite('a'),
+        'a/ATest.php': testCase('ATest'),
+        'b/BTest.php': testCase('BTest'),
+        '.vscode/settings.json': JSON.stringify({ 'phpunit.phpunit': phpunit }),
+    });
+    configs.push({
+        label: 'watching:delete-configuration',
+        files: 'out/tests/suite-watching/deleteConfiguration.test.js',
+        mocha: mochaOpts,
+        launchArgs: [root, '--disable-extensions', ...userDataDirArgs('delete-configuration')],
     });
 }
 

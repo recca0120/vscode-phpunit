@@ -539,3 +539,26 @@ describe('PHPUnit XML in subdirectory (../tests)', () => {
         );
     });
 });
+
+describe('unload', () => {
+    it('forgets the loaded configuration file and its testsuites', () => {
+        const phpUnitXML = new PHPUnitXML().load(
+            generateXML(`
+                <testsuites>
+                    <testsuite name="Unit">
+                        <directory>tests/Unit</directory>
+                    </testsuite>
+                </testsuites>
+            `),
+            phpUnitProject('phpunit.xml'),
+        );
+
+        phpUnitXML.unload().setRoot(phpUnitProject(''));
+
+        expect(phpUnitXML.file()).toEqual('');
+        expect(phpUnitXML.testSuites()).toEqual([
+            { tag: 'directory', name: 'default', value: '', suffix: '.php' },
+            { tag: 'exclude', name: 'default', value: 'vendor' },
+        ]);
+    });
+});
