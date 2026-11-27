@@ -1,7 +1,9 @@
 <?php
 
 namespace Regressions\First {
-    class Alpha {}
+    class Alpha
+    {
+    }
 }
 
 namespace Regressions\Second {
