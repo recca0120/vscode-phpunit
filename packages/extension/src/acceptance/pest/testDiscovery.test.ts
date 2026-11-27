@@ -1,0 +1,91 @@
+import { join, relative, sep } from 'node:path';
+import { initTreeSitter, TestType } from '@vscode-phpunit/phpunit';
+import { minimatch } from 'minimatch';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
+import { type ExtensionContext, workspace } from 'vscode';
+import { createExtensionContext } from '../../../fakes/extensionContext';
+import { openWorkspace } from '../../../fakes/openWorkspace';
+import { childLabels } from '../../../test-support/testItems';
+import { icon } from '../../TestTree/TestHierarchyBuilder';
+import { activateExtension } from '../harness';
+import { phpUnitSettings, stubs } from '../support';
+
+describe.each(stubs.pest)('Pest $name ($pestVersion)', ({ root, binary, args }) => {
+    let context: ExtensionContext;
+
+    beforeAll(async () => initTreeSitter());
+
+    beforeEach(async () => {
+        context = createExtensionContext();
+        await openWorkspace({ root, settings: phpUnitSettings(binary, args) });
+    });
+    afterEach(() => vi.clearAllMocks());
+
+    describe('test discovery', () => {
+        it('includes test methods of a trait whose file does not match the testsuite suffix', async () => {
+            const extension = await activateExtension(context);
+            await extension.resolve();
+
+            expect(
+                childLabels(
+                    extension.controller.items,
+                    'Shared Trait User (Tests\\Unit\\SharedTraitUser)',
+                ),
+            ).toEqual([
+                `${icon(TestType.method)} test_from_shared_trait`,
+                `${icon(TestType.method)} test_own`,
+            ]);
+        });
+
+        it('includes test methods inherited from a class outside the testsuite directories through composer autoload', async () => {
+            const extension = await activateExtension(context);
+            await extension.resolve();
+
+            expect(
+                childLabels(
+                    extension.controller.items,
+                    'Inherits Support Base (Tests\\Unit\\InheritsSupportBase)',
+                ),
+            ).toEqual([
+                `${icon(TestType.method)} test_from_support_base`,
+                `${icon(TestType.method)} test_own`,
+            ]);
+        });
+
+        it('watches composer autoload-dev files outside the testsuite directories', async () => {
+            const extension = await activateExtension(context);
+            await extension.resolve();
+            const supportFile = join(root, 'tests/Support/AbstractSharedTestCase.php');
+
+            const watched = (workspace.createFileSystemWatcher as Mock).mock.results.some(
+                ({ value }) => {
+                    const { base, pattern } = value.pattern as {
+                        base: string;
+                        pattern: string;
+                    };
+                    return minimatch(relative(base, supportFile).split(sep).join('/'), pattern);
+                },
+            );
+
+            expect(watched).toBe(true);
+        });
+
+        it('watches composer.json to reload when the autoload mapping changes', async () => {
+            const extension = await activateExtension(context);
+            await extension.resolve();
+            const composerJson = join(root, 'composer.json');
+
+            const watched = (workspace.createFileSystemWatcher as Mock).mock.results.some(
+                ({ value }) => {
+                    const { base, pattern } = value.pattern as {
+                        base: string;
+                        pattern: string;
+                    };
+                    return minimatch(relative(base, composerJson).split(sep).join('/'), pattern);
+                },
+            );
+
+            expect(watched).toBe(true);
+        });
+    });
+});

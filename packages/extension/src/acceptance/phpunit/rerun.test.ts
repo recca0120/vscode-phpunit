@@ -1,0 +1,120 @@
+import { spawn } from 'node:child_process';
+import { CloverParser, initTreeSitter } from '@vscode-phpunit/phpunit';
+import { phpUnitProject } from '@vscode-phpunit/phpunit/testing';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
+import { commands, type ExtensionContext, TestRunProfileKind, Uri, workspace } from 'vscode';
+import { createExtensionContext } from '../../../fakes/extensionContext';
+import { openWorkspace, setActiveTextEditor } from '../../../fakes/openWorkspace';
+import { phpUnitFixture } from '../../../test-support/fixtures';
+import { expectSpawned } from '../../../test-support/process';
+import { findItem } from '../../../test-support/testItems';
+import { activateExtension } from '../harness';
+import { methodFilter, phpUnitSettings, stubs } from '../support';
+
+describe.each(stubs.phpUnit)('PHPUnit $name ($phpUnitVersion)', ({ root, binary, args }) => {
+    let context: ExtensionContext;
+
+    beforeAll(async () => initTreeSitter());
+
+    beforeEach(async () => {
+        context = createExtensionContext();
+        await openWorkspace({ root, settings: phpUnitSettings(binary, args) });
+    });
+    afterEach(() => vi.clearAllMocks());
+
+    describe('rerun', () => {
+        it('phpunit.rerun runs the previous request again', async () => {
+            const _ext = await activateExtension(context);
+            setActiveTextEditor(phpUnitFixture.assertionsTest, phpUnitFixture.cursorInTestPassed);
+
+            await commands.executeCommand('phpunit.run-test-at-cursor');
+
+            vi.mocked(spawn).mockClear();
+
+            await commands.executeCommand('phpunit.rerun');
+
+            expectSpawned({
+                cwd: root,
+                args: [
+                    binary,
+                    methodFilter('test_passed'),
+                    Uri.file(phpUnitProject('tests/AssertionsTest.php')).fsPath,
+                    '--colors=always',
+                    '--teamcity',
+                ],
+            });
+        });
+
+        it('a continuous run does not replace the request to rerun', async () => {
+            type FakeWatcher = {
+                fireChange: (uri: Uri) => void;
+                pattern: { pattern: string };
+            };
+            const watchers = (workspace as unknown as { createdWatchers: FakeWatcher[] })
+                .createdWatchers;
+            const extension = await activateExtension(context);
+            const { controller } = extension;
+            const before = watchers.length;
+            await extension.resolve();
+            const testWatchers = watchers
+                .slice(before)
+                .filter(({ pattern }) => !pattern.pattern.includes('.xml'));
+            setActiveTextEditor(phpUnitFixture.assertionsTest, phpUnitFixture.cursorInTestPassed);
+            await commands.executeCommand('phpunit.run-test-at-cursor');
+            const calculator = findItem(controller.items, phpUnitFixture.items.calculator);
+            await extension.run([calculator], { continuous: true });
+            vi.mocked(spawn).mockClear();
+            for (const watcher of testWatchers) {
+                watcher.fireChange(Uri.file(phpUnitFixture.calculatorTest));
+            }
+            await vi.waitFor(
+                () => {
+                    const testRuns = (controller.createTestRun as Mock).mock.results;
+                    expect(testRuns).toHaveLength(2);
+                    expect(testRuns[1].value.end).toHaveBeenCalled();
+                },
+                { timeout: 10_000 },
+            );
+
+            vi.mocked(spawn).mockClear();
+            await commands.executeCommand('phpunit.rerun');
+
+            expectSpawned({
+                cwd: root,
+                args: [
+                    binary,
+                    methodFilter('test_passed'),
+                    Uri.file(phpUnitProject('tests/AssertionsTest.php')).fsPath,
+                    '--colors=always',
+                    '--teamcity',
+                ],
+            });
+        });
+
+        it('phpunit.rerun keeps the coverage profile of the previous run', async () => {
+            vi.spyOn(CloverParser.prototype, 'parseClover').mockResolvedValue([]);
+
+            const extension = await activateExtension(context);
+            const { controller } = extension;
+            const include = [findItem(controller.items, phpUnitFixture.items.assertions)];
+            await extension.run(include, { kind: TestRunProfileKind.Coverage });
+
+            vi.mocked(spawn).mockClear();
+            await commands.executeCommand('phpunit.rerun');
+
+            expectSpawned({
+                cwd: root,
+                args: [
+                    '-dxdebug.mode=coverage',
+                    binary,
+                    /AssertionsTest\.php/,
+                    '--colors=always',
+                    '--teamcity',
+                    '--coverage-clover',
+                    /\.phpunit\.cache[/\\]coverage-.+-0\.xml/,
+                ],
+                env: { XDEBUG_MODE: 'coverage' },
+            });
+        });
+    });
+});
