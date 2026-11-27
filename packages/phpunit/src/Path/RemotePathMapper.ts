@@ -1,5 +1,5 @@
 import type { SpawnOptions } from 'node:child_process';
-import type { Path } from './Path';
+import type { PathMappings } from './PathMappings';
 import type { PathResolver } from './PathResolver';
 import { type PathMapping, PrefixPathMapper } from './PrefixPathMapper';
 import { VariableResolver } from './VariableResolver';
@@ -10,7 +10,7 @@ export class RemotePathMapper implements PathResolver {
 
     constructor(
         private options: SpawnOptions = {},
-        paths?: Path,
+        paths?: PathMappings,
         workspaceFolder?: string,
     ) {
         const cwd = this.fixWindowsDriveLetter(
