@@ -43,26 +43,28 @@ describe('TestRunnerEventProxy', () => {
     });
 });
 
-describe('EventResultMap covers all events', () => {
-    it('should have keys for every TestRunnerEvent', () => {
-        const allRunnerEvents = Object.values(TestRunnerEvent);
-        const mapKeys = new Set<string>();
+describe('TestRunnerEventProxy notifies a listener of every event', () => {
+    it('notifies listeners of every TestRunnerEvent', () => {
+        for (const event of Object.values(TestRunnerEvent)) {
+            const proxy = createTestRunnerEventProxy();
+            const listener = vi.fn();
 
-        const proxy = createTestRunnerEventProxy();
-        for (const event of allRunnerEvents) {
-            expect(typeof proxy[event]).toBe('function');
-            mapKeys.add(event);
+            proxy.on(event, listener);
+            proxy[event]('payload' as never);
+
+            expect(listener).toHaveBeenCalledWith('payload');
         }
-
-        expect(mapKeys.size).toBe(allRunnerEvents.length);
     });
 
-    it('should have keys for every TeamcityEvent', () => {
-        const allTeamcityEvents = Object.values(TeamcityEvent);
-        const proxy = createTestRunnerEventProxy();
+    it('notifies listeners of every TeamcityEvent', () => {
+        for (const event of Object.values(TeamcityEvent)) {
+            const proxy = createTestRunnerEventProxy();
+            const listener = vi.fn();
 
-        for (const event of allTeamcityEvents) {
-            expect(typeof proxy[event]).toBe('function');
+            proxy.on(event, listener);
+            proxy[event]('payload' as never);
+
+            expect(listener).toHaveBeenCalledWith('payload');
         }
     });
 });

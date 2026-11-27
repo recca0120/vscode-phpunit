@@ -1,73 +1,23 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expectTypeOf, it } from 'vitest';
+import type { TeamcityEvent } from '../TestOutput';
+import type { EventResultMap, TestRunnerEvent } from './TestRunnerEvent';
 import type { TestRunnerObserver } from './TestRunnerObserver';
 
 describe('TestRunnerObserver', () => {
-    describe('TestRunnerObserver type covers all events', () => {
-        it('should allow implementing all TestRunnerEvent handlers', () => {
-            const observer: TestRunnerObserver = {
-                start: () => {},
-                run: () => {},
-                line: () => {},
-                result: () => {},
-                output: () => {},
-                error: () => {},
-                close: () => {},
-                abort: () => {},
-                done: () => {},
-            };
+    it('has a handler for every TestRunnerEvent', () => {
+        expectTypeOf<TestRunnerEvent>().toExtend<keyof EventResultMap>();
+        expectTypeOf<TestRunnerEvent>().toExtend<keyof TestRunnerObserver>();
+    });
 
-            expect(observer.start).toBeDefined();
-            expect(observer.run).toBeDefined();
-            expect(observer.line).toBeDefined();
-            expect(observer.result).toBeDefined();
-            expect(observer.output).toBeDefined();
-            expect(observer.error).toBeDefined();
-            expect(observer.close).toBeDefined();
-            expect(observer.abort).toBeDefined();
-            expect(observer.done).toBeDefined();
-        });
+    it('has a handler for every TeamcityEvent', () => {
+        expectTypeOf<TeamcityEvent>().toExtend<keyof EventResultMap>();
+        expectTypeOf<TeamcityEvent>().toExtend<keyof TestRunnerObserver>();
+    });
 
-        it('should allow implementing all TeamcityEvent handlers', () => {
-            const observer: TestRunnerObserver = {
-                testVersion: () => {},
-                testProcesses: () => {},
-                testRuntime: () => {},
-                testConfiguration: () => {},
-                testSuiteStarted: () => {},
-                testCount: () => {},
-                testStarted: () => {},
-                testFinished: () => {},
-                testFailed: () => {},
-                testIgnored: () => {},
-                testSuiteFinished: () => {},
-                testDuration: () => {},
-                testResultSummary: () => {},
-            };
-
-            expect(observer.testVersion).toBeDefined();
-            expect(observer.testProcesses).toBeDefined();
-            expect(observer.testRuntime).toBeDefined();
-            expect(observer.testConfiguration).toBeDefined();
-            expect(observer.testSuiteStarted).toBeDefined();
-            expect(observer.testCount).toBeDefined();
-            expect(observer.testStarted).toBeDefined();
-            expect(observer.testFinished).toBeDefined();
-            expect(observer.testFailed).toBeDefined();
-            expect(observer.testIgnored).toBeDefined();
-            expect(observer.testSuiteFinished).toBeDefined();
-            expect(observer.testDuration).toBeDefined();
-            expect(observer.testResultSummary).toBeDefined();
-        });
-
-        it('should allow partial implementation (only some handlers)', () => {
-            const observer: TestRunnerObserver = {
-                testFailed: () => {},
-                error: () => {},
-            };
-
-            expect(observer.testFailed).toBeDefined();
-            expect(observer.error).toBeDefined();
-            expect(observer.testFinished).toBeUndefined();
-        });
+    it('allows implementing only some handlers', () => {
+        expectTypeOf<{
+            testFailed: () => void;
+            error: () => void;
+        }>().toExtend<TestRunnerObserver>();
     });
 });

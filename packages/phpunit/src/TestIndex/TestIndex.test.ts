@@ -76,8 +76,10 @@ describe('TestIndex', () => {
         expect(testIndex.has(uri)).toBe(false);
     });
 
-    it('classHierarchy should be owned by TestIndex, not TestParser', () => {
-        expect(testParser).not.toHaveProperty('classHierarchy');
+    it('keeps the class registry in TestIndex, not in TestParser', () => {
+        expect(Object.values(testParser).some((value) => value instanceof ClassRegistry)).toBe(
+            false,
+        );
     });
 
     describe('testsuites from phpunit.xml', () => {

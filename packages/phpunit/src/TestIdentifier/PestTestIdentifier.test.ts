@@ -2,11 +2,12 @@ import { describe, expect, it } from 'vitest';
 import { TestType } from '../types';
 import './PestFixer';
 import { PestTestIdentifier } from './PestTestIdentifier';
+import { TestIdentifier } from './TestIdentifier';
 
 describe('PestTestIdentifier', () => {
-    const transformer = new PestTestIdentifier();
+    const identifier = new PestTestIdentifier();
 
-    describe('generateUniqueId', () => {
+    describe('uniqueId', () => {
         it('test /** with comment */ should do', () => {
             const type = TestType.method;
             const className = 'P\\Tests\\Unit\\ExampleTest';
@@ -14,7 +15,7 @@ describe('PestTestIdentifier', () => {
             const classFQN = className;
 
             const expected = 'tests/Unit/ExampleTest.php::test /** with comment */ should do';
-            expect(transformer.uniqueId({ type, classFQN, methodName })).toEqual(expected);
+            expect(identifier.uniqueId({ type, classFQN, methodName })).toEqual(expected);
         });
 
         it('ensures the given closures reports the correct class name and suggests the [pest()] function', () => {
@@ -26,7 +27,7 @@ describe('PestTestIdentifier', () => {
 
             const expected =
                 'tests/Unit/ExampleTest.php::ensures the given closures reports the correct class name and suggests the [pest()] function';
-            expect(transformer.uniqueId({ type, classFQN, methodName })).toEqual(expected);
+            expect(identifier.uniqueId({ type, classFQN, methodName })).toEqual(expected);
         });
     });
 
@@ -34,7 +35,7 @@ describe('PestTestIdentifier', () => {
         it('test /** with comment */ should do', () => {
             const input = 'test /** with comment */ should do';
             const expected = 'test /\\*\\* with comment \\*/ should do';
-            expect(input.replace(/([[\]()*])/g, '\\$1')).toEqual(expected);
+            expect(TestIdentifier.generateSearchText(input)).toEqual(expected);
         });
 
         it('ensures the given closures reports the correct class name and suggests the [pest()] function', () => {
@@ -42,7 +43,7 @@ describe('PestTestIdentifier', () => {
                 'ensures the given closures reports the correct class name and suggests the [pest()] function';
             const expected =
                 'ensures the given closures reports the correct class name and suggests the \\[pest\\(\\)\\] function';
-            expect(input.replace(/([[\]()*])/g, '\\$1')).toEqual(expected);
+            expect(TestIdentifier.generateSearchText(input)).toEqual(expected);
         });
     });
 
@@ -54,7 +55,7 @@ describe('PestTestIdentifier', () => {
                 'tests/Unit/PlaylistServiceTests.php::`Foo\\Services\\PlaylistService` → it does something',
             ],
         ])('fromLocationHint(%j, %j) → id: %s', (locationHint, name, expectedId) => {
-            const result = transformer.fromLocationHint(locationHint, name);
+            const result = identifier.fromLocationHint(locationHint, name);
             expect(result.id).toBe(expectedId);
         });
     });
@@ -82,7 +83,7 @@ describe('PestTestIdentifier', () => {
                 'tests/Unit/SampleTests.php::`something` \u2192 it should detect OK but does not',
             ],
         ])('fromLocationHint(%j, %j) → id: %s', (locationHint, name, expectedId) => {
-            const result = transformer.fromLocationHint(locationHint, name);
+            const result = identifier.fromLocationHint(locationHint, name);
             expect(result.id).toBe(expectedId);
         });
     });
