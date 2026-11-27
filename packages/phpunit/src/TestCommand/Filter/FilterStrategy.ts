@@ -10,7 +10,7 @@ export abstract class FilterStrategy {
         return groups.length > 0 ? groups.map((group) => `--group=${group}`).join(' ') : undefined;
     }
 
-    protected parseFilter(filter: string) {
+    protected filterArgument(filter: string) {
         return `--filter="/${filter}(( with (data set )?.*)?)?$/"`;
     }
 

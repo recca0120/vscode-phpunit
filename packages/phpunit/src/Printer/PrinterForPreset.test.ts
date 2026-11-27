@@ -132,7 +132,7 @@ function runLifecycle(printer: Printer) {
             failed: 0,
             skipped: 1,
         }),
-        printer.timeAndMemory({
+        printer.testDuration({
             text: 'Time: 00:00.123, Memory: 10.00 MB',
             time: '00:00.123',
             memory: '10.00 MB',

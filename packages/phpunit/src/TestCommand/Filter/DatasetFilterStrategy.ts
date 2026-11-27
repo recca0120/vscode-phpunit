@@ -3,7 +3,7 @@ import { TestIdentifier } from '../../TestIdentifier/TestIdentifier';
 import { DescribeFilterStrategy } from './DescribeFilterStrategy';
 
 export class DatasetFilterStrategy extends DescribeFilterStrategy {
-    protected parseFilter(filter: string) {
+    protected filterArgument(filter: string) {
         return `--filter='/${filter}$/'`;
     }
 

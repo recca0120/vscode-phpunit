@@ -176,7 +176,7 @@ export class Printer {
         return this.line(this.interpolate(this.format.suiteFinished, {}));
     }
 
-    timeAndMemory(result: TestDuration) {
+    testDuration(result: TestDuration) {
         return this.formatWithErrors(this.format.duration, {
             text: result.text.trim(),
             time: result.time,

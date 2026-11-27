@@ -14,7 +14,7 @@ export class DescribeFilterStrategy extends FilterStrategy {
         const deps = this.testDefinition.annotations?.depends ?? [];
         const filter = [methodName, ...deps].filter((value) => !!value).join('|');
 
-        return this.parseFilter(`^.*::(${filter})`);
+        return this.filterArgument(`^.*::(${filter})`);
     }
 
     protected methodNamePattern() {

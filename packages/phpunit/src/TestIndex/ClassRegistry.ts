@@ -12,7 +12,7 @@ export class ClassRegistry {
         this.registry.set(info.classFQN, info);
     }
 
-    unregisterFile(uri: string): ClassInfo[] {
+    unregisterPath(uri: string): ClassInfo[] {
         const removed = this.filterValues(
             (info) => info.uri === uri || info.uri.startsWith(`${uri}${sep}`),
         );

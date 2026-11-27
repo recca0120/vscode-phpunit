@@ -80,7 +80,7 @@ export class PrinterObserver implements TestRunnerObserver {
     }
 
     testDuration(result: TestDuration) {
-        this.append(this.printer.timeAndMemory(result));
+        this.append(this.printer.testDuration(result));
     }
 
     close() {

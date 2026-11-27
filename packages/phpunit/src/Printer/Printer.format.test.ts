@@ -42,8 +42,8 @@ describe('Printer with custom started/duration/summary format', () => {
         expect(output).toEqual(`test_something${EOL}`);
     });
 
-    it('timeAndMemory uses format template', () => {
-        const output = printer.timeAndMemory({
+    it('testDuration uses format template', () => {
+        const output = printer.testDuration({
             text: 'Time: 00:00.123, Memory: 10.00 MB',
         } as TestDuration);
 
@@ -276,7 +276,7 @@ describe('Printer exposes all type fields as template variables', () => {
         expect(output).toEqual(`AssertionsTest (App\\Tests\\AssertionsTest)${EOL}`);
     });
 
-    it('timeAndMemory exposes time and memory variables', () => {
+    it('testDuration exposes time and memory variables', () => {
         const format = resolveFormat('collision', {
             colors: false,
             duration: 'T={time} M={memory}',
@@ -284,7 +284,7 @@ describe('Printer exposes all type fields as template variables', () => {
         const printer = new Printer(phpUnitXML, format);
         printer.start();
 
-        const output = printer.timeAndMemory({
+        const output = printer.testDuration({
             text: 'Time: 00:00.123, Memory: 10.00 MB',
             time: '00:00.123',
             memory: '10.00 MB',
