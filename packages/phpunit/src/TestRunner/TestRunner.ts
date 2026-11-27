@@ -5,12 +5,12 @@ import type { TestRunnerEmitter, TestRunnerObserver } from './TestRunnerObserver
 import { TestRunnerProcess } from './TestRunnerProcess';
 
 export class TestRunner implements TestRunnerEmitter {
-    private readonly defaultObserver: TestRunnerEventProxy;
+    private readonly listeners: TestRunnerEventProxy;
     private observers: TestRunnerObserver[] = [];
 
     constructor() {
-        this.defaultObserver = createTestRunnerEventProxy();
-        this.observe(this.defaultObserver);
+        this.listeners = createTestRunnerEventProxy();
+        this.observe(this.listeners);
     }
 
     observe(observer: TestRunnerObserver) {
@@ -21,7 +21,7 @@ export class TestRunner implements TestRunnerEmitter {
         eventName: K,
         callback: (result: EventResultMap[K]) => void,
     ): this {
-        this.defaultObserver.on(eventName, callback);
+        this.listeners.on(eventName, callback);
 
         return this;
     }

@@ -35,12 +35,12 @@ export class TestIndex {
     }
 
     async update(uri: URI) {
-        return this.enqueue(() => this.doChange(uri));
+        return this.enqueue(() => this.indexFile(uri));
     }
 
     async remove(uri: URI): Promise<IndexChange> {
         const deleted = this.removeFiles(uri);
-        const change = await this.enqueue(() => this.doDeleteClasses(uri));
+        const change = await this.enqueue(() => this.unindexClassesOf(uri));
 
         return { parsed: change.parsed, deleted: [...deleted, ...change.deleted] };
     }
@@ -120,13 +120,13 @@ export class TestIndex {
         return files;
     }
 
-    private async doDeleteClasses(uri: URI): Promise<IndexChange> {
-        const previous = this.classes.unregisterFile(uri.fsPath);
+    private async unindexClassesOf(uri: URI): Promise<IndexChange> {
+        const previous = this.classes.unregisterPath(uri.fsPath);
 
         return this.reparseDependents(uri, previous);
     }
 
-    private async doChange(uri: URI): Promise<IndexChange> {
+    private async indexFile(uri: URI): Promise<IndexChange> {
         const parsed: IndexChange['parsed'] = [];
         const deleted: IndexChange['deleted'] = [];
 
@@ -135,7 +135,7 @@ export class TestIndex {
             return this.isSupportFile(uri) ? this.indexSupportFile(uri) : { parsed, deleted };
         }
 
-        const previous = this.classes.unregisterFile(uri.fsPath);
+        const previous = this.classes.unregisterPath(uri.fsPath);
 
         this.store.defineTestsuites(this.phpUnitXML.testSuites().map((s) => s.name));
         const tests = await this.parseTests(uri, testsuite);
@@ -166,7 +166,7 @@ export class TestIndex {
     }
 
     private async indexSupportFile(uri: URI): Promise<IndexChange> {
-        const previous = this.classes.unregisterFile(uri.fsPath);
+        const previous = this.classes.unregisterPath(uri.fsPath);
         const parseResult = await this.testParser.parseFile(uri.fsPath);
         await this.registerClasses(parseResult?.classes ?? [], parseResult?.includes);
 
