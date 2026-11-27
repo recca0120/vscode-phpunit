@@ -1,4 +1,4 @@
-import { spawn } from 'node:child_process';
+import { type ChildProcess, type SpawnOptions, spawn } from 'node:child_process';
 import { initTreeSitter, TestType } from '@vscode-phpunit/phpunit';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { commands, type ExtensionContext, Uri } from 'vscode';
@@ -191,5 +191,64 @@ describe('multi-root workspace (PHPUnit + Pest)', {
             args: [pestStub.binary, '--colors=always', '--teamcity'],
         });
         expect(spawn).toHaveBeenCalledTimes(1);
+    });
+
+    const recordProcessEvents = async (act: () => Promise<unknown>) => {
+        const spawnSpy = vi.mocked(spawn);
+        const originalSpawn = spawnSpy.getMockImplementation();
+        if (!originalSpawn) {
+            throw new Error('Mock implementation not found');
+        }
+        const events: string[] = [];
+        spawnSpy.mockImplementation((...spawnArgs: Parameters<typeof spawn>) => {
+            const child = originalSpawn(...spawnArgs) as ChildProcess;
+            const folder = String((spawnArgs[2] as SpawnOptions | undefined)?.cwd);
+            events.push(`start ${folder}`);
+            child.on('close', () => events.push(`close ${folder}`));
+            return child;
+        });
+
+        try {
+            await act();
+        } finally {
+            spawnSpy.mockImplementation(originalSpawn);
+        }
+
+        return events;
+    };
+
+    const expectBothStartedBeforeEitherClosed = (events: string[]) => {
+        expect(events.filter((event) => event.startsWith('start '))).toHaveLength(2);
+        expect(events.slice(0, 2).every((event) => event.startsWith('start '))).toBe(true);
+    };
+
+    it('runs the tests of every folder at the same time', async () => {
+        const extension = await activateExtension(context);
+
+        const events = await recordProcessEvents(() => extension.run());
+
+        expectBothStartedBeforeEitherClosed(events);
+    });
+
+    it('runs selected tests of different folders at the same time', async () => {
+        const extension = await activateExtension(context);
+        const { controller } = extension;
+        const phpUnitFolder = findItem(
+            controller.items,
+            `folder:${Uri.file(phpUnitStub.root).toString()}`,
+        );
+        const pestFolder = findItem(
+            controller.items,
+            `folder:${Uri.file(pestStub.root).toString()}`,
+        );
+        if (!phpUnitFolder || !pestFolder) throw new Error('folder item not found');
+        const include = [
+            findItem(phpUnitFolder.children, 'Assertions (Tests\\Assertions)'),
+            findItem(pestFolder.children, 'testsuite:Unit'),
+        ];
+
+        const events = await recordProcessEvents(() => extension.run(include));
+
+        expectBothStartedBeforeEitherClosed(events);
     });
 });
