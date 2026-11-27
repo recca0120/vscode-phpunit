@@ -1,4 +1,5 @@
 import { beforeAll, describe, expect, it } from 'vitest';
+import { parsers } from '../../tests/support/parsers';
 import type {
     AstNode,
     CallNode,
@@ -6,21 +7,12 @@ import type {
     ExpressionStatementNode,
     MethodNode,
 } from './AstParser/AstNode';
-
-type MethodWithClass = { method: MethodNode; classBody: AstNode[] };
-
-import type { AstParser } from './AstParser/AstParser';
-import { PhpParserAstParser } from './AstParser/PhpParser/PhpParserAstParser';
-import { TreeSitterAstParser } from './AstParser/TreeSitter/TreeSitterAstParser';
 import { initTreeSitter } from './AstParser/TreeSitter/TreeSitterParser';
 import { resolveLabels } from './Expressions/PhpExpression';
 
-const parseDataProvider = (node: AstNode, classBody?: AstNode[]) => resolveLabels(node, classBody);
+type MethodWithClass = { method: MethodNode; classBody: AstNode[] };
 
-const parsers: [string, () => AstParser][] = [
-    ['tree-sitter', () => new TreeSitterAstParser()],
-    ['php-parser', () => new PhpParserAstParser()],
-];
+const parseDataProvider = (node: AstNode, classBody?: AstNode[]) => resolveLabels(node, classBody);
 
 beforeAll(async () => initTreeSitter());
 

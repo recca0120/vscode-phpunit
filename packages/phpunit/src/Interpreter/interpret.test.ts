@@ -1,15 +1,8 @@
 import { beforeAll, describe, expect, it } from 'vitest';
+import { parsers } from '../../tests/support/parsers';
 import type { AstNode } from './AstParser/AstNode';
-import type { AstParser } from './AstParser/AstParser';
-import { PhpParserAstParser } from './AstParser/PhpParser/PhpParserAstParser';
-import { TreeSitterAstParser } from './AstParser/TreeSitter/TreeSitterAstParser';
 import { initTreeSitter } from './AstParser/TreeSitter/TreeSitterParser';
 import { interpret } from './PHP';
-
-const parsers: [string, () => AstParser][] = [
-    ['tree-sitter', () => new TreeSitterAstParser()],
-    ['php-parser', () => new PhpParserAstParser()],
-];
 
 beforeAll(async () => initTreeSitter());
 

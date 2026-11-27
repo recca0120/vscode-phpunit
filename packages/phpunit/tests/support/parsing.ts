@@ -11,9 +11,8 @@ import type { TestDefinition } from '../../src/types';
 const flatten = (tests: TestDefinition[]): TestDefinition[] =>
     tests.flatMap((test) => [test, ...flatten(test.children ?? [])]);
 
-export const parseTestFile = (
-    buffer: Buffer | string,
-    file: string,
+export const parseTestFiles = (
+    files: { file: string; content: Buffer | string }[],
     root: string,
     astParser?: AstParser,
 ) => {
@@ -23,19 +22,28 @@ export const parseTestFile = (
         phpUnitXML,
         astParser ?? new ChainAstParser([new TreeSitterAstParser(), new PhpParserAstParser()]),
     );
-
-    const result = testParser.parse(buffer, file);
-    if (!result) {
-        return [];
-    }
-
     const registry = new ClassRegistry();
-    for (const cls of result.classes) {
-        registry.register(cls);
-    }
 
-    return flatten(new InheritanceResolver(registry).resolve(result.tests));
+    const tests = files.flatMap(({ file, content }) => {
+        const result = testParser.parse(content, file);
+        if (!result) {
+            return [];
+        }
+        for (const cls of result.classes) {
+            registry.register(cls);
+        }
+        return result.tests;
+    });
+
+    return flatten(new InheritanceResolver(registry).resolve(tests));
 };
+
+export const parseTestFile = (
+    buffer: Buffer | string,
+    file: string,
+    root: string,
+    astParser?: AstParser,
+) => parseTestFiles([{ file, content: buffer }], root, astParser);
 
 export const findTest = (tests: TestDefinition[], id: string) => {
     const matchers: ((test: TestDefinition) => boolean)[] = [

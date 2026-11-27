@@ -1,18 +1,12 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import { pestProject } from '../../tests/support/fixtures';
+import { parsers } from '../../tests/support/parsers';
 import { findTest, parseTestFile } from '../../tests/support/parsing';
 import type { AstParser } from '../Interpreter/AstParser/AstParser';
-import { PhpParserAstParser } from '../Interpreter/AstParser/PhpParser/PhpParserAstParser';
-import { TreeSitterAstParser } from '../Interpreter/AstParser/TreeSitter/TreeSitterAstParser';
 import { initTreeSitter } from '../Interpreter/AstParser/TreeSitter/TreeSitterParser';
 import { TestType } from '../types';
 
-const parsers: [string, () => AstParser][] = [
-    ['tree-sitter', () => new TreeSitterAstParser()],
-    ['php-parser', () => new PhpParserAstParser()],
-];
-
-export const parse = (buffer: Buffer | string, file: string, astParser?: AstParser) =>
+const parse = (buffer: Buffer | string, file: string, astParser?: AstParser) =>
     parseTestFile(buffer, file, pestProject(''), astParser);
 
 beforeAll(async () => initTreeSitter());
