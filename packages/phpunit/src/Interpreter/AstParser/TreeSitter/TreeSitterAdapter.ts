@@ -702,13 +702,42 @@ function adaptArguments(argsNode: SyntaxNode): AstNode[] {
     return args;
 }
 
+const SIMPLE_ESCAPES: Record<string, string> = {
+    n: '\n',
+    t: '\t',
+    r: '\r',
+    v: '\v',
+    e: '\x1b',
+    f: '\f',
+    '\\': '\\',
+    $: '$',
+    '"': '"',
+};
+
+const decodeDoubleQuoted = (text: string) =>
+    text.replace(
+        /\\(u\{[0-9A-Fa-f]+\}|x[0-9A-Fa-f]{1,2}|[0-7]{1,3}|[ntrvef\\$"])/g,
+        (_match, sequence: string) => {
+            if (sequence.startsWith('u{')) {
+                return String.fromCodePoint(Number.parseInt(sequence.slice(2, -1), 16));
+            }
+            if (sequence.startsWith('x')) {
+                return String.fromCharCode(Number.parseInt(sequence.slice(1), 16));
+            }
+            if (/^[0-7]/.test(sequence)) {
+                return String.fromCharCode(Number.parseInt(sequence, 8) & 0xff);
+            }
+            return SIMPLE_ESCAPES[sequence];
+        },
+    );
+
 function adaptString(node: SyntaxNode): AstNode {
     const text = node.text;
     let value = text;
     if (text.startsWith("'") && text.endsWith("'")) {
         value = text.slice(1, -1).replace(/\\'/g, "'").replace(/\\\\/g, '\\');
     } else if (text.startsWith('"') && text.endsWith('"')) {
-        value = text.slice(1, -1).replace(/\\"/g, '"').replace(/\\\\/g, '\\');
+        value = decodeDoubleQuoted(text.slice(1, -1));
     }
     return { kind: 'string', value, loc: locOf(node) };
 }
