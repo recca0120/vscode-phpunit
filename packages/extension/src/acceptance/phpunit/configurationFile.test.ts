@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, realpath, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, realpath, rm, unlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { initTreeSitter } from '@vscode-phpunit/phpunit';
@@ -10,7 +10,7 @@ import { allIds, filesOf } from '../../../test-support/testItems';
 import { activateExtension } from '../harness';
 import { stubs } from '../support';
 
-type FileEvents = { fireFileEvent: (event: 'change', uri: Uri) => void };
+type FileEvents = { fireFileEvent: (event: 'create' | 'change' | 'delete', uri: Uri) => void };
 
 const testsuite = (directory: string) => `<?xml version="1.0" encoding="UTF-8"?>
 <phpunit>
@@ -59,6 +59,41 @@ ${methods
     .join('\n')}}
 `;
 
+const baseCase = `<?php
+
+namespace Base;
+
+use PHPUnit\\Framework\\TestCase;
+
+abstract class BaseCase extends TestCase
+{
+    public function test_inherited(): void
+    {
+        $this->assertTrue(true);
+    }
+}
+`;
+
+const childTest = `<?php
+
+class ChildTest extends Base\\BaseCase
+{
+    public function test_own(): void
+    {
+        $this->assertTrue(true);
+    }
+}
+`;
+
+const autoloadDev = `{
+    "autoload-dev": {
+        "psr-4": {
+            "Base\\\\": "lib/"
+        }
+    }
+}
+`;
+
 const testCase = (name: string) => `<?php
 
 use PHPUnit\\Framework\\TestCase;
@@ -83,9 +118,22 @@ describe('phpunit.xml and the files it points to', () => {
         }
     };
 
+    const fireFileEvent = (event: 'create' | 'change' | 'delete', file: string) =>
+        (workspace as unknown as FileEvents).fireFileEvent(event, Uri.file(join(tmp, file)));
+
+    const createFile = async (file: string, content: string) => {
+        await writeFiles({ [file]: content });
+        fireFileEvent('create', file);
+    };
+
     const changeFile = async (file: string, content: string) => {
         await writeFile(join(tmp, file), content);
-        (workspace as unknown as FileEvents).fireFileEvent('change', Uri.file(join(tmp, file)));
+        fireFileEvent('change', file);
+    };
+
+    const deleteFile = async (file: string) => {
+        await unlink(join(tmp, file));
+        fireFileEvent('delete', file);
     };
 
     beforeAll(async () => initTreeSitter());
@@ -135,6 +183,152 @@ describe('phpunit.xml and the files it points to', () => {
             await changeFile('phpunit.custom.xml', testsuite('b'));
 
             await vi.waitFor(() => expect(filesOf(items)).toEqual([join(tmp, 'b/BTest.php')]));
+        });
+    });
+
+    describe('reloading the tests when the configuration file is created, deleted or changed', () => {
+        it('reloads when phpunit.xml is created', async () => {
+            await writeFiles({
+                'a/ATest.php': testCase('ATest'),
+                'b/BTest.php': testCase('BTest'),
+            });
+            await openWorkspace({ root: tmp, settings: { php: 'php' } });
+            const extension = await activateExtension(context);
+            await extension.resolve();
+            const { items } = extension.controller;
+            expect(filesOf(items).sort()).toEqual([
+                join(tmp, 'a/ATest.php'),
+                join(tmp, 'b/BTest.php'),
+            ]);
+
+            await createFile('phpunit.xml', testsuite('a'));
+
+            await vi.waitFor(() => expect(filesOf(items)).toEqual([join(tmp, 'a/ATest.php')]));
+        });
+
+        it('reloads when composer.json changes', async () => {
+            await writeFiles({
+                'phpunit.xml': testsuite('tests'),
+                'composer.json': '{}\n',
+                'lib/BaseCase.php': baseCase,
+                'tests/ChildTest.php': childTest,
+            });
+            await openWorkspace({ root: tmp, settings: { php: 'php' } });
+            const extension = await activateExtension(context);
+            await extension.resolve();
+            const { items } = extension.controller;
+            expect(allIds(items)).toEqual(['Child', 'Child::Own']);
+
+            await changeFile('composer.json', autoloadDev);
+
+            await vi.waitFor(() =>
+                expect(allIds(items)).toEqual(['Child', 'Child::Own', 'Child::Inherited']),
+            );
+        });
+
+        it('reloads when composer.json is deleted', async () => {
+            await writeFiles({
+                'phpunit.xml': testsuite('tests'),
+                'composer.json': autoloadDev,
+                'lib/BaseCase.php': baseCase,
+                'tests/ChildTest.php': childTest,
+            });
+            await openWorkspace({ root: tmp, settings: { php: 'php' } });
+            const extension = await activateExtension(context);
+            await extension.resolve();
+            const { items } = extension.controller;
+            expect(allIds(items)).toEqual(['Child', 'Child::Own', 'Child::Inherited']);
+
+            await deleteFile('composer.json');
+
+            await vi.waitFor(() => expect(allIds(items)).toEqual(['Child', 'Child::Own']));
+        });
+
+        it('watches the test files of the new testsuite directory after a reload', async () => {
+            await writeFiles({
+                'phpunit.xml': testsuite('a'),
+                'a/ATest.php': testCase('ATest'),
+                'b/BTest.php': testCase('BTest'),
+            });
+            await openWorkspace({ root: tmp, settings: { php: 'php' } });
+            const extension = await activateExtension(context);
+            await extension.resolve();
+            const { items } = extension.controller;
+            await changeFile('phpunit.xml', testsuite('b'));
+            await vi.waitFor(() => expect(filesOf(items)).toEqual([join(tmp, 'b/BTest.php')]));
+
+            await createFile('b/CTest.php', testCase('CTest'));
+
+            await vi.waitFor(() =>
+                expect(filesOf(items)).toEqual([
+                    join(tmp, 'b/BTest.php'),
+                    join(tmp, 'b/CTest.php'),
+                ]),
+            );
+        });
+    });
+
+    describe('creating and deleting test files', () => {
+        it('adds the tests of a created test file', async () => {
+            await writeFiles({
+                'phpunit.xml': testsuite('tests'),
+                'tests/ATest.php': testCase('ATest'),
+            });
+            await openWorkspace({ root: tmp, settings: { php: 'php' } });
+            const extension = await activateExtension(context);
+            await extension.resolve();
+            const { items } = extension.controller;
+
+            await createFile('tests/BTest.php', testCase('BTest'));
+
+            await vi.waitFor(() =>
+                expect(filesOf(items)).toEqual([
+                    join(tmp, 'tests/ATest.php'),
+                    join(tmp, 'tests/BTest.php'),
+                ]),
+            );
+        });
+
+        it('removes the tests of a deleted test file', async () => {
+            await writeFiles({
+                'phpunit.xml': testsuite('tests'),
+                'tests/ATest.php': testCase('ATest'),
+                'tests/BTest.php': testCase('BTest'),
+            });
+            await openWorkspace({ root: tmp, settings: { php: 'php' } });
+            const extension = await activateExtension(context);
+            await extension.resolve();
+            const { items } = extension.controller;
+
+            await deleteFile('tests/BTest.php');
+
+            await vi.waitFor(() => expect(filesOf(items)).toEqual([join(tmp, 'tests/ATest.php')]));
+        });
+    });
+
+    describe('continuous runs', () => {
+        const [phpUnitStub] = stubs.phpUnit;
+        const phpunit = join(phpUnitStub.root, phpUnitStub.binary);
+
+        it('reruns when a test file is created during a continuous run of everything', async () => {
+            await writeFiles({
+                'phpunit.xml': testsuite('tests'),
+                'tests/ATest.php': testCase('ATest'),
+            });
+            await openWorkspace({ root: tmp, settings: { php: 'php', phpunit } });
+            const extension = await activateExtension(context);
+            await extension.resolve();
+            await extension.run(undefined, { continuous: true });
+
+            await createFile('tests/BTest.php', testCase('BTest'));
+
+            await vi.waitFor(
+                () => {
+                    expect(extension.testRuns()).toHaveLength(1);
+                    expect(extension.testRuns()[0].end).toHaveBeenCalled();
+                },
+                { timeout: 10_000 },
+            );
         });
     });
 
