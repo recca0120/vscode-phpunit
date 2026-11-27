@@ -1,5 +1,5 @@
 import type { PathMapper } from '../Path/PathMapper';
-import type { SpawnSpec } from '../TestCommand/Environment';
+import type { SpawnSpec } from '../TestCommand/SpawnSpec';
 
 export interface ProcessCommand {
     readonly paths: PathMapper;

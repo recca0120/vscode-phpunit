@@ -1,10 +1,8 @@
-import type { SpawnOptions } from 'node:child_process';
 import { parseArgv } from '../Configuration/arguments';
 import { CMD_TEMPLATE, CMD_TEMPLATE_QUOTED } from '../constants';
 import type { PathMapper } from '../Path/PathMapper';
 import type { Arg, Invocation } from './Invocation';
-
-export type SpawnSpec = { runtime: string; args: string[]; options: SpawnOptions };
+import type { SpawnSpec } from './SpawnSpec';
 
 export interface Environment {
     readonly paths: PathMapper;

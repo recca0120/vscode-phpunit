@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { dirname, isAbsolute, join, normalize, relative, resolve } from 'node:path';
+import { XmlElement } from '../Xml/XmlElement';
 import { TestGlobPattern } from './TestGlobPattern';
-import { XmlElement } from './XmlElement';
 
 export { TestGlobPattern };
 
