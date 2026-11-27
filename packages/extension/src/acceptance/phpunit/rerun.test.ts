@@ -5,11 +5,10 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, type Mock, vi }
 import { commands, type ExtensionContext, TestRunProfileKind, Uri, workspace } from 'vscode';
 import { createExtensionContext } from '../../../fakes/extensionContext';
 import { openWorkspace, setActiveTextEditor } from '../../../fakes/openWorkspace';
-import { phpUnitFixture } from '../../../test-support/fixtures';
 import { expectSpawned } from '../../../test-support/process';
 import { findItem } from '../../../test-support/testItems';
 import { activateExtension } from '../harness';
-import { methodFilter, phpUnitSettings, stubs } from '../support';
+import { methodFilter, stubs } from '../support';
 
 describe.each(stubs.phpUnit)('PHPUnit $name ($phpUnitVersion)', ({ root, binary, args }) => {
     let context: ExtensionContext;
@@ -18,14 +17,17 @@ describe.each(stubs.phpUnit)('PHPUnit $name ($phpUnitVersion)', ({ root, binary,
 
     beforeEach(async () => {
         context = createExtensionContext();
-        await openWorkspace({ root, settings: phpUnitSettings(binary, args) });
+        await openWorkspace({ root, settings: { php: 'php', phpunit: binary, args: args } });
     });
     afterEach(() => vi.clearAllMocks());
 
     describe('rerun', () => {
         it('phpunit.rerun runs the previous request again', async () => {
             const _ext = await activateExtension(context);
-            setActiveTextEditor(phpUnitFixture.assertionsTest, phpUnitFixture.cursorInTestPassed);
+            setActiveTextEditor(phpUnitProject('tests/AssertionsTest.php'), {
+                line: 17,
+                character: 14,
+            });
 
             await commands.executeCommand('phpunit.run-test-at-cursor');
 
@@ -59,13 +61,16 @@ describe.each(stubs.phpUnit)('PHPUnit $name ($phpUnitVersion)', ({ root, binary,
             const testWatchers = watchers
                 .slice(before)
                 .filter(({ pattern }) => !pattern.pattern.includes('.xml'));
-            setActiveTextEditor(phpUnitFixture.assertionsTest, phpUnitFixture.cursorInTestPassed);
+            setActiveTextEditor(phpUnitProject('tests/AssertionsTest.php'), {
+                line: 17,
+                character: 14,
+            });
             await commands.executeCommand('phpunit.run-test-at-cursor');
-            const calculator = findItem(controller.items, phpUnitFixture.items.calculator);
+            const calculator = findItem(controller.items, 'Calculator (Tests\\Calculator)');
             await extension.run([calculator], { continuous: true });
             vi.mocked(spawn).mockClear();
             for (const watcher of testWatchers) {
-                watcher.fireChange(Uri.file(phpUnitFixture.calculatorTest));
+                watcher.fireChange(Uri.file(phpUnitProject('tests/CalculatorTest.php')));
             }
             await vi.waitFor(
                 () => {
@@ -96,7 +101,7 @@ describe.each(stubs.phpUnit)('PHPUnit $name ($phpUnitVersion)', ({ root, binary,
 
             const extension = await activateExtension(context);
             const { controller } = extension;
-            const include = [findItem(controller.items, phpUnitFixture.items.assertions)];
+            const include = [findItem(controller.items, 'Assertions (Tests\\Assertions)')];
             await extension.run(include, { kind: TestRunProfileKind.Coverage });
 
             vi.mocked(spawn).mockClear();

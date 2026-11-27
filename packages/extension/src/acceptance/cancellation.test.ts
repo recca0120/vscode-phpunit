@@ -1,13 +1,12 @@
 import { type ChildProcess, spawn } from 'node:child_process';
 import { initTreeSitter } from '@vscode-phpunit/phpunit';
+import { phpUnitProject } from '@vscode-phpunit/phpunit/testing';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { CancellationTokenSource, type ExtensionContext, type TestItem, window } from 'vscode';
 import { createExtensionContext } from '../../fakes/extensionContext';
 import { openWorkspace } from '../../fakes/openWorkspace';
-import { phpUnitFixture } from '../../test-support/fixtures';
 import { findItem } from '../../test-support/testItems';
 import { activateExtension } from './harness';
-import { phpUnitSettings } from './support';
 
 let context: ExtensionContext;
 
@@ -18,10 +17,13 @@ beforeEach(() => {
 });
 
 describe('cancellation', () => {
-    const root = phpUnitFixture.root;
+    const root = phpUnitProject('');
 
     beforeEach(async () => {
-        await openWorkspace({ root, settings: phpUnitSettings('vendor/bin/phpunit') });
+        await openWorkspace({
+            root,
+            settings: { php: 'php', phpunit: 'vendor/bin/phpunit', args: [] },
+        });
     });
 
     afterEach(() => vi.clearAllMocks());
@@ -42,7 +44,7 @@ describe('cancellation', () => {
         try {
             const extension = await activateExtension(context);
             const { controller } = extension;
-            const include = [phpUnitFixture.items.assertions, phpUnitFixture.items.calculator]
+            const include = ['Assertions (Tests\\Assertions)', 'Calculator (Tests\\Calculator)']
                 .map((id) => findItem(controller.items, id))
                 .filter((item): item is TestItem => item !== undefined);
 
@@ -75,7 +77,7 @@ describe('cancellation', () => {
         try {
             const extension = await activateExtension(context);
             const { controller } = extension;
-            const item = findItem(controller.items, phpUnitFixture.items.assertions);
+            const item = findItem(controller.items, 'Assertions (Tests\\Assertions)');
             if (!item) {
                 throw new Error('Test item not found');
             }

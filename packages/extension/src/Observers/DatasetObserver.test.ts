@@ -2,9 +2,11 @@ import {
     ChainAstParser,
     PHPUnitXML,
     PhpParserAstParser,
+    type TeamcityEvent,
     type TestDefinition,
     TestIndex,
     TestParser,
+    type TestStarted,
     TestType,
     TreeSitterAstParser,
 } from '@vscode-phpunit/phpunit';
@@ -12,7 +14,6 @@ import { generateXML, pestProject, phpUnitProject } from '@vscode-phpunit/phpuni
 import { beforeEach, describe, expect, it } from 'vitest';
 import { type TestController, type TestItem, tests } from 'vscode';
 import { URI } from 'vscode-uri';
-import { testStarted } from '../../test-support/teamcity';
 import { TestTree } from '../TestTree/TestTree';
 import { DatasetObserver } from './DatasetObserver';
 
@@ -56,12 +57,12 @@ describe('DatasetObserver', () => {
     });
 
     it('should create child TestItem on testStarted with data set', () => {
-        observer.testStarted(
-            testStarted({
-                id: parentItem.id,
-                name: 'addition_provider with data set #0',
-            }),
-        );
+        observer.testStarted({
+            event: 'testStarted' as unknown as TeamcityEvent,
+            id: parentItem.id,
+            name: 'addition_provider with data set #0',
+            flowId: 1,
+        } as unknown as TestStarted);
 
         const childId = `${parentItem.id} with data set #0`;
         const child = parentItem.children.get(childId);
@@ -77,12 +78,12 @@ describe('DatasetObserver', () => {
     });
 
     it('should create child TestItem for named data set', () => {
-        observer.testStarted(
-            testStarted({
-                id: parentItem.id,
-                name: 'addition_provider with data set "adding zeros"',
-            }),
-        );
+        observer.testStarted({
+            event: 'testStarted' as unknown as TeamcityEvent,
+            id: parentItem.id,
+            name: 'addition_provider with data set "adding zeros"',
+            flowId: 1,
+        } as unknown as TestStarted);
 
         const childId = `${parentItem.id} with data set "adding zeros"`;
         const child = parentItem.children.get(childId);
@@ -92,21 +93,23 @@ describe('DatasetObserver', () => {
     it('should not create child for non-dataset results', () => {
         const sizeBefore = parentItem.children.size;
 
-        observer.testStarted(
-            testStarted({
-                id: parentItem.id,
-                name: 'addition_provider',
-            }),
-        );
+        observer.testStarted({
+            event: 'testStarted' as unknown as TeamcityEvent,
+            id: parentItem.id,
+            name: 'addition_provider',
+            flowId: 1,
+        } as unknown as TestStarted);
 
         expect(parentItem.children.size).toBe(sizeBefore);
     });
 
     it('should reuse existing child on repeated runs', () => {
-        const result = testStarted({
+        const result = {
+            event: 'testStarted' as unknown as TeamcityEvent,
             id: parentItem.id,
             name: 'addition_provider with data set #0',
-        });
+            flowId: 1,
+        } as unknown as TestStarted;
 
         observer.testStarted(result);
         const child1 = parentItem.children.get(`${parentItem.id} with data set #0`);
@@ -124,23 +127,23 @@ describe('DatasetObserver', () => {
         testItemById.set(childId, childItem);
 
         const sizeBefore = testItemById.size;
-        observer.testStarted(
-            testStarted({
-                id: childId,
-                name: 'addition_provider with data set #0',
-            }),
-        );
+        observer.testStarted({
+            event: 'testStarted' as unknown as TeamcityEvent,
+            id: childId,
+            name: 'addition_provider with data set #0',
+            flowId: 1,
+        } as unknown as TestStarted);
 
         expect(testItemById.size).toBe(sizeBefore);
     });
 
     it('should add child to parent children collection', () => {
-        observer.testStarted(
-            testStarted({
-                id: parentItem.id,
-                name: 'addition_provider with data set #0',
-            }),
-        );
+        observer.testStarted({
+            event: 'testStarted' as unknown as TeamcityEvent,
+            id: parentItem.id,
+            name: 'addition_provider with data set #0',
+            flowId: 1,
+        } as unknown as TestStarted);
 
         const child = parentItem.children.get(`${parentItem.id} with data set #0`);
         expect(child).toBeDefined();
@@ -189,12 +192,12 @@ describe('DatasetObserver (Pest)', () => {
     });
 
     it('should create dataset child with correct id and label', () => {
-        observer.testStarted(
-            testStarted({
-                id: parentItem.id,
-                name: `it has user's email with data set "('enunomaduro@gmail.com')"`,
-            }),
-        );
+        observer.testStarted({
+            event: 'testStarted' as unknown as TeamcityEvent,
+            id: parentItem.id,
+            name: `it has user's email with data set "('enunomaduro@gmail.com')"`,
+            flowId: 1,
+        } as unknown as TestStarted);
 
         const childId =
             `tests/Unit/ExampleTest.php::it has user's email` +

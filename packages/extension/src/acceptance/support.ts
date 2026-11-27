@@ -14,14 +14,6 @@ export const stubs = {
     pest: detectPestStubs(),
 };
 
-export const phpBinary = 'php';
-
-export const phpUnitSettings = (binary: string, args: string[] = []) => ({
-    php: phpBinary,
-    phpunit: binary,
-    args,
-});
-
 export const methodFilter = (method: string) =>
     new RegExp(
         `--filter=["']?/\\^\\.\\*::\\(${method}\\)\\(\\( with \\(data set \\)\\?\\.\\*\\)\\?\\)\\?\\$/["']?`,

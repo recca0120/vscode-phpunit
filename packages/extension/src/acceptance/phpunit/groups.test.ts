@@ -4,10 +4,9 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, type Mock, vi }
 import { commands, type ExtensionContext, Uri, window, workspace } from 'vscode';
 import { createExtensionContext } from '../../../fakes/extensionContext';
 import { openWorkspace, setActiveTextEditor } from '../../../fakes/openWorkspace';
-import { phpUnitFixture } from '../../../test-support/fixtures';
 import { expectSpawned } from '../../../test-support/process';
 import { activateExtension } from '../harness';
-import { activateAndRun, methodFilter, phpUnitSettings, stubs } from '../support';
+import { activateAndRun, methodFilter, stubs } from '../support';
 
 describe.each(stubs.phpUnit)('PHPUnit $name ($phpUnitVersion)', ({ root, binary, args }) => {
     let context: ExtensionContext;
@@ -16,7 +15,7 @@ describe.each(stubs.phpUnit)('PHPUnit $name ($phpUnitVersion)', ({ root, binary,
 
     beforeEach(async () => {
         context = createExtensionContext();
-        await openWorkspace({ root, settings: phpUnitSettings(binary, args) });
+        await openWorkspace({ root, settings: { php: 'php', phpunit: binary, args: args } });
     });
     afterEach(() => vi.clearAllMocks());
 
@@ -52,7 +51,7 @@ describe.each(stubs.phpUnit)('PHPUnit $name ($phpUnitVersion)', ({ root, binary,
         });
 
         it('runs a class with a group by that group', async () => {
-            await activateAndRun(context, { include: phpUnitFixture.items.attribute });
+            await activateAndRun(context, { include: 'Attribute (Tests\\Attribute)' });
 
             expectSpawned({
                 cwd: root,
@@ -67,7 +66,7 @@ describe.each(stubs.phpUnit)('PHPUnit $name ($phpUnitVersion)', ({ root, binary,
         });
 
         it('runs a method with a group by its name', async () => {
-            await activateAndRun(context, { include: phpUnitFixture.items.assertionsPassed });
+            await activateAndRun(context, { include: 'Assertions (Tests\\Assertions)::Passed' });
 
             expectSpawned({
                 cwd: root,
@@ -83,7 +82,10 @@ describe.each(stubs.phpUnit)('PHPUnit $name ($phpUnitVersion)', ({ root, binary,
 
         it('runs the method with a group under the cursor by its name', async () => {
             const _ext = await activateExtension(context);
-            setActiveTextEditor(phpUnitFixture.assertionsTest, phpUnitFixture.cursorInTestPassed);
+            setActiveTextEditor(phpUnitProject('tests/AssertionsTest.php'), {
+                line: 17,
+                character: 14,
+            });
 
             await commands.executeCommand('phpunit.run-test-at-cursor');
 

@@ -4,10 +4,9 @@ import { afterEach, beforeAll, beforeEach, describe, it, vi } from 'vitest';
 import { commands, type ExtensionContext, Uri } from 'vscode';
 import { createExtensionContext } from '../../../fakes/extensionContext';
 import { openWorkspace, setActiveTextEditor } from '../../../fakes/openWorkspace';
-import { phpUnitFixture } from '../../../test-support/fixtures';
 import { expectSpawned } from '../../../test-support/process';
 import { activateExtension } from '../harness';
-import { methodFilter, phpUnitSettings, stubs } from '../support';
+import { methodFilter, stubs } from '../support';
 
 describe.each(stubs.phpUnit)('PHPUnit $name ($phpUnitVersion)', ({ root, binary, args }) => {
     let context: ExtensionContext;
@@ -16,7 +15,7 @@ describe.each(stubs.phpUnit)('PHPUnit $name ($phpUnitVersion)', ({ root, binary,
 
     beforeEach(async () => {
         context = createExtensionContext();
-        await openWorkspace({ root, settings: phpUnitSettings(binary, args) });
+        await openWorkspace({ root, settings: { php: 'php', phpunit: binary, args: args } });
     });
     afterEach(() => vi.clearAllMocks());
 
@@ -30,7 +29,7 @@ describe.each(stubs.phpUnit)('PHPUnit $name ($phpUnitVersion)', ({ root, binary,
         });
 
         it('phpunit.run-file runs the file of the active editor', async () => {
-            setActiveTextEditor(phpUnitFixture.assertionsTest);
+            setActiveTextEditor(phpUnitProject('tests/AssertionsTest.php'));
             const _ext = await activateExtension(context);
 
             await commands.executeCommand('phpunit.run-file');
@@ -48,7 +47,10 @@ describe.each(stubs.phpUnit)('PHPUnit $name ($phpUnitVersion)', ({ root, binary,
 
         it('phpunit.run-test-at-cursor runs the test method under the cursor', async () => {
             const _ext = await activateExtension(context);
-            setActiveTextEditor(phpUnitFixture.assertionsTest, phpUnitFixture.cursorInTestPassed);
+            setActiveTextEditor(phpUnitProject('tests/AssertionsTest.php'), {
+                line: 17,
+                character: 14,
+            });
 
             await commands.executeCommand('phpunit.run-test-at-cursor');
 
