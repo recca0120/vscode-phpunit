@@ -193,7 +193,14 @@ export class InheritanceResolver {
             if (sourceMethod) {
                 collected.set(adapt.alias, {
                     trait: adapt.trait ?? '',
-                    method: { ...sourceMethod, methodName: adapt.alias },
+                    method: {
+                        ...sourceMethod,
+                        methodName: adapt.alias,
+                        label:
+                            sourceMethod.label === sourceMethod.methodName
+                                ? adapt.alias
+                                : sourceMethod.label,
+                    },
                 });
             }
         }

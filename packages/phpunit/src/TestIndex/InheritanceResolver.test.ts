@@ -656,6 +656,64 @@ class TraitConflictTest extends TestCase {
         expect(methodNames).toContain('test_b_only');
     });
 
+    it('lists both the trait test method and its alias when as names no trait', () => {
+        const tests = parseFiles(
+            [
+                {
+                    file: phpUnitProject('tests/TraitAliasTest.php'),
+                    content: `<?php
+namespace Tests;
+use PHPUnit\\Framework\\TestCase;
+
+trait GreetingTrait {
+    public function test_hello() {}
+}
+
+class TraitAliasTest extends TestCase {
+    use GreetingTrait {
+        test_hello as test_greeting;
+    }
+}`,
+                },
+            ],
+            phpUnitProject(''),
+        );
+
+        expect(
+            tests
+                .filter((t) => t.className === 'TraitAliasTest' && t.methodName)
+                .map((t) => t.methodName),
+        ).toEqual(['test_hello', 'test_greeting']);
+    });
+
+    it('labels a trait test method aliased with as by its alias', () => {
+        const tests = parseFiles(
+            [
+                {
+                    file: phpUnitProject('tests/TraitAliasTest.php'),
+                    content: `<?php
+namespace Tests;
+use PHPUnit\\Framework\\TestCase;
+
+trait GreetingTrait {
+    public function test_hello() {}
+}
+
+class TraitAliasTest extends TestCase {
+    use GreetingTrait {
+        GreetingTrait::test_hello as test_greeting;
+    }
+}`,
+                },
+            ],
+            phpUnitProject(''),
+        );
+
+        expect(
+            tests.find((t) => t.className === 'TraitAliasTest' && t.methodName === 'test_greeting'),
+        ).toEqual(expect.objectContaining({ label: 'test_greeting' }));
+    });
+
     it('child class override should take precedence', () => {
         const root = phpUnitProject('');
         const tests = parseFiles(
