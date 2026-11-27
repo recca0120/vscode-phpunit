@@ -107,7 +107,7 @@ export class TemplateCommandLauncher implements CommandLauncher {
                 }
 
                 const value = this.runsInShell ? this.quoteForShell(arg) : arg;
-                token = token.replace(placeholder, () => value);
+                token = token.split(placeholder).join(value);
             }
 
             return token;
