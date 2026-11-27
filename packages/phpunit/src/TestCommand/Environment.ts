@@ -1,7 +1,7 @@
 import type { SpawnOptions } from 'node:child_process';
+import { parseArgv } from '../Configuration/arguments';
 import { CMD_TEMPLATE, CMD_TEMPLATE_QUOTED } from '../constants';
 import type { PathMapper } from '../Path/PathMapper';
-import { parseArgv } from '../utils';
 import type { Arg, Invocation } from './Invocation';
 
 export type SpawnSpec = { runtime: string; args: string[]; options: SpawnOptions };

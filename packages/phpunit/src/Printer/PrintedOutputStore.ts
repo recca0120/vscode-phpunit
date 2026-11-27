@@ -1,4 +1,4 @@
-import { EOL } from '../utils';
+import { EOL } from '../constants';
 
 export class PrintedOutputStore {
     private current?: string;

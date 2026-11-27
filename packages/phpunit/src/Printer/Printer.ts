@@ -1,3 +1,4 @@
+import { EOL } from '../constants';
 import type { PHPUnitXML } from '../PHPUnitXML/PHPUnitXML';
 import {
     TeamcityEvent,
@@ -15,7 +16,6 @@ import {
     type TestSuiteStarted,
     type TestVersion,
 } from '../TestOutput/types';
-import { EOL } from '../utils';
 import { AnsiStyle, DEFAULT_THEME } from './AnsiStyle';
 import { PrintedOutputStore } from './PrintedOutputStore';
 import type { ErrorCategory, IconSet, PrinterFormat } from './PrinterConfig';

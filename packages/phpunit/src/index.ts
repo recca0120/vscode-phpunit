@@ -1,5 +1,6 @@
 export * from './Composer';
 export * from './Configuration';
+export { EOL } from './constants';
 export * from './Path';
 export * from './PHPUnitXML';
 export * from './Printer';
@@ -12,4 +13,4 @@ export * from './TestParser';
 export * from './TestRunner';
 export * from './TestTree';
 export { type TestDefinition, TestType } from './types';
-export { EOL, semverGte, semverLt } from './utils';
+export { semverGte, semverLt } from './utils';
