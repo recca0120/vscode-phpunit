@@ -9,6 +9,7 @@ import { evaluate } from '../Expressions/evaluate';
 import type { Interpreter } from '../Interpreter';
 import type { FileInfo, PestCallDescriptor, Resolver } from '../types';
 import { CallVisitor } from '../Visitors/CallVisitor';
+import type { NamespaceScope } from '../Visitors/NamespaceVisitor';
 import { FQNResolver } from './FQNResolver';
 
 const pestFunctionNames = new Set(['test', 'it', 'describe', 'arch']);
@@ -37,7 +38,7 @@ export class PestResolver implements Resolver {
         this.reset();
         const visitor = interpreter.getVisitor(CallVisitor);
         for (const call of visitor.calls) {
-            const pest = buildPestCallDescriptor(call, interpreter);
+            const pest = buildPestCallDescriptor(call, interpreter, visitor.scopeOf(call));
             if (pest) {
                 this._pestCalls.push(pest);
             }
@@ -53,7 +54,11 @@ function unwrapArgument(node: AstNode | undefined): AstNode | undefined {
     return node?.kind === 'argument' ? node.value : node;
 }
 
-function extractDescription(args: AstNode[], interpreter: Interpreter): string | undefined {
+function extractDescription(
+    args: AstNode[],
+    interpreter: Interpreter,
+    scope: NamespaceScope | undefined,
+): string | undefined {
     const firstArg = unwrapArgument(args[0]);
     if (firstArg?.kind === 'string') {
         return firstArg.value;
@@ -61,7 +66,7 @@ function extractDescription(args: AstNode[], interpreter: Interpreter): string |
     if (firstArg?.kind === 'class_constant_access') {
         const node = firstArg as ClassConstantAccessNode;
         if (node.name === 'class') {
-            return interpreter.getResolver(FQNResolver).resolveFQN(node.scope);
+            return interpreter.getResolver(FQNResolver).resolveFQN(node.scope, scope);
         }
     }
     return undefined;
@@ -198,6 +203,7 @@ function walkAndCollect(call: CallNode): ChainWalkResult | undefined {
 function buildPestCallDescriptor(
     call: CallNode,
     interpreter: Interpreter,
+    scope: NamespaceScope | undefined,
 ): PestCallDescriptor | undefined {
     const result = walkAndCollect(call);
     if (!result) {
@@ -222,11 +228,13 @@ function buildPestCallDescriptor(
 
     return {
         fnName: rootCall.name,
-        description: extractDescription(rootCall.arguments, interpreter),
+        description: extractDescription(rootCall.arguments, interpreter, scope),
         range: rootCall.loc,
         datasets: resolveDatasets(withSources),
         children:
-            rootCall.name === 'describe' ? collectDescribeChildren(rootCall, interpreter) : [],
+            rootCall.name === 'describe'
+                ? collectDescribeChildren(rootCall, interpreter, scope)
+                : [],
         chainCalls,
         skipped: skipped || undefined,
         skipReason,
@@ -438,6 +446,7 @@ function unwrapClosureBody(node: AstNode): AstNode | undefined {
 function collectDescribeChildren(
     describeCall: CallNode,
     interpreter: Interpreter,
+    scope: NamespaceScope | undefined,
 ): PestCallDescriptor[] {
     const closureArg = describeCall.arguments[1];
     if (!closureArg) {
@@ -450,17 +459,18 @@ function collectDescribeChildren(
     }
 
     if (bodyNode.kind === 'function_call_expression') {
-        const pest = buildPestCallDescriptor(bodyNode as CallNode, interpreter);
+        const pest = buildPestCallDescriptor(bodyNode as CallNode, interpreter, scope);
         return pest ? [pest] : [];
     }
 
     const stmts = bodyNode.kind === 'compound_statement' ? bodyNode.children : [];
-    return collectPestCallsFromStatements(stmts, interpreter);
+    return collectPestCallsFromStatements(stmts, interpreter, scope);
 }
 
 function collectPestCallsFromStatements(
     stmts: AstNode[],
     interpreter: Interpreter,
+    scope: NamespaceScope | undefined,
 ): PestCallDescriptor[] {
     const result: PestCallDescriptor[] = [];
     for (const node of stmts) {
@@ -471,7 +481,7 @@ function collectPestCallsFromStatements(
         if (expr.kind !== 'function_call_expression') {
             continue;
         }
-        const pest = buildPestCallDescriptor(expr as CallNode, interpreter);
+        const pest = buildPestCallDescriptor(expr as CallNode, interpreter, scope);
         if (pest) {
             result.push(pest);
         }
