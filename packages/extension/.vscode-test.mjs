@@ -1,5 +1,5 @@
 import { execSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { platform, tmpdir } from 'node:os';
 import { basename, dirname, join, resolve } from 'node:path';
 import { defineConfig } from '@vscode/test-cli';
@@ -7,10 +7,13 @@ import { defineConfig } from '@vscode/test-cli';
 const fixturesPath = resolve(import.meta.dirname, '../phpunit/tests/fixtures');
 const mochaOpts = { ui: 'tdd', timeout: 30_000 };
 
-function userDataDirArgs(label) {
-    const base = platform() === 'darwin' ? (process.env.RUNNER_TEMP ?? '/tmp') : tmpdir();
+const e2eBase = join(
+    platform() === 'darwin' ? (process.env.RUNNER_TEMP ?? '/tmp') : tmpdir(),
+    'vsc-e2e',
+);
 
-    return ['--user-data-dir', join(base, 'vsc-e2e', label)];
+function userDataDirArgs(label) {
+    return ['--user-data-dir', join(e2eBase, label)];
 }
 
 function temporaryWorkspace(source) {
@@ -75,13 +78,15 @@ function detectPestStubs() {
 }
 
 function watchingWorkspace(name, files) {
-    const root = realpathSync(mkdtempSync(join(tmpdir(), `vsc-e2e-${name}-`)));
+    const root = join(e2eBase, 'workspaces', name);
+    rmSync(root, { recursive: true, force: true });
+    mkdirSync(root, { recursive: true });
     for (const [file, content] of Object.entries(files)) {
         mkdirSync(dirname(join(root, file)), { recursive: true });
         writeFileSync(join(root, file), content);
     }
 
-    return root;
+    return realpathSync(root);
 }
 
 const testsuite = (directory) => `<?xml version="1.0" encoding="UTF-8"?>
@@ -248,6 +253,61 @@ if (phpUnitStubs.length > 0) {
             ...userDataDirArgs('create-during-continuous-run'),
         ],
     });
+}
+
+if (phpUnitStubs.length > 0) {
+    const stub = phpUnitStubs.at(-1);
+    const phpunit = join(fixturesPath, 'phpunit-stub', stub.binary);
+    const scenarios = [
+        {
+            name: 'relative',
+            folder: '',
+            file: 'phpunit.custom.xml',
+            arg: () => 'phpunit.custom.xml',
+        },
+        {
+            name: 'absolute',
+            folder: '',
+            file: 'phpunit.custom.xml',
+            arg: (root) => join(root, 'phpunit.custom.xml'),
+        },
+        {
+            name: 'workspace-folder',
+            folder: '',
+            file: 'phpunit.custom.xml',
+            arg: () => `\${workspaceFolder}/phpunit.custom.xml`,
+        },
+        { name: 'parent', folder: 'proj', file: 'phpunit.xml', arg: () => '../phpunit.xml' },
+    ];
+    for (const { name, folder, file, arg } of scenarios) {
+        const prefix = folder ? `${folder}/` : '';
+        const root = watchingWorkspace(`change-configuration-${name}`, {
+            [file]: testsuite(`${prefix}a`),
+            [`${prefix}a/ATest.php`]: testCase('ATest'),
+            [`${prefix}b/BTest.php`]: testCase('BTest'),
+        });
+        const folderRoot = join(root, folder);
+        mkdirSync(join(folderRoot, '.vscode'), { recursive: true });
+        writeFileSync(
+            join(folderRoot, '.vscode/settings.json'),
+            JSON.stringify({ 'phpunit.phpunit': phpunit, 'phpunit.args': ['-c', arg(folderRoot)] }),
+        );
+        configs.push({
+            label: `watching:change-configuration-${name}`,
+            files: 'out/tests/suite-watching/changeConfiguration.test.js',
+            mocha: mochaOpts,
+            launchArgs: [
+                folderRoot,
+                '--disable-extensions',
+                ...userDataDirArgs(`change-configuration-${name}`),
+            ],
+            env: {
+                CONFIGURATION_SCENARIO: name,
+                CONFIGURATION_FILE: folder ? `../${file}` : file,
+                CONFIGURATION_NEW_DIRECTORY: `${prefix}b`,
+            },
+        });
+    }
 }
 
 const issue381Root = join(fixturesPath, 'issue-381/php-project');

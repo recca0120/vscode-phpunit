@@ -1,4 +1,10 @@
-import { ComposerAutoload, PHPUnitXML, type TestGlobPattern } from '@vscode-phpunit/phpunit';
+import { dirname, isAbsolute, join, relative } from 'node:path';
+import {
+    ComposerAutoload,
+    PHPUnitXML,
+    type TestGlobPattern,
+    VAR_WORKSPACE_FOLDER,
+} from '@vscode-phpunit/phpunit';
 import { inject, injectable } from 'inversify';
 import { type GlobPattern, RelativePattern, type WorkspaceFolder, workspace } from 'vscode';
 import { URI } from 'vscode-uri';
@@ -51,16 +57,24 @@ export class TestFileDiscovery {
         };
     }
 
-    getConfigFilePattern(): string {
-        const configArg = this.configuration
-            .arguments()
-            .find((p) => p.startsWith('--configuration='));
-        if (configArg) {
-            const configFile = configArg.replace('--configuration=', '');
-            return `{${configFile},composer.json,composer.lock}`;
+    getConfigFilePattern(): RelativePattern {
+        const configurationFile = this.configurationFileArgument();
+        if (!configurationFile) {
+            return new RelativePattern(
+                this.workspaceFolder,
+                '{phpunit.xml,phpunit.xml.dist,phpunit.dist.xml,composer.json,composer.lock}',
+            );
         }
 
-        return '{phpunit.xml,phpunit.xml.dist,phpunit.dist.xml,composer.json,composer.lock}';
+        const root = this.workspaceFolder.uri.fsPath;
+        const base = this.commonAncestor(root, dirname(configurationFile));
+        const files = [
+            configurationFile,
+            join(root, 'composer.json'),
+            join(root, 'composer.lock'),
+        ].map((file) => relative(base, file).replace(/\\/g, '/'));
+
+        return new RelativePattern(URI.file(base), `{${files.join(',')}}`);
     }
 
     async reloadAll(): Promise<void> {
@@ -84,6 +98,31 @@ export class TestFileDiscovery {
         }
 
         await Promise.all([...newFiles].map((f) => this.testTree.add(URI.parse(f))));
+    }
+
+    private configurationFileArgument(): string | undefined {
+        const configArg = this.configuration
+            .arguments()
+            .find((p) => p.startsWith('--configuration='));
+        if (!configArg) {
+            return undefined;
+        }
+
+        const root = this.workspaceFolder.uri.fsPath;
+        const configurationFile = configArg
+            .replace('--configuration=', '')
+            .replace(VAR_WORKSPACE_FOLDER, root);
+
+        return isAbsolute(configurationFile) ? configurationFile : join(root, configurationFile);
+    }
+
+    private commonAncestor(root: string, directory: string): string {
+        let base = root;
+        while (relative(base, directory).startsWith('..') && dirname(base) !== base) {
+            base = dirname(base);
+        }
+
+        return base;
     }
 
     private isInWorkspaceFolder(uri: string): boolean {
