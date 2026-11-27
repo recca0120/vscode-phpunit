@@ -466,6 +466,17 @@ class OwnClassConstantProviderTest extends TestCase
             );
         });
 
+        it('decodes escape sequences in a double-quoted data set key', () => {
+            expect(givenProviderTest('return ["first\\nsecond" => [1]];')).toEqual(
+                expect.objectContaining({
+                    annotations: {
+                        dataProvider: ['provider'],
+                        dataset: ['data set "first\nsecond"'],
+                    },
+                }),
+            );
+        });
+
         it('loop yielding integer keys is renumbered like PHPUnit', () => {
             expect(givenProviderTest('for ($i = 5; $i < 7; $i++) { yield $i => [$i]; }')).toEqual(
                 expect.objectContaining({
