@@ -1,6 +1,6 @@
 import type { Annotations, Range } from '../types';
 import type { AstNode, ClassNode, MethodNode } from './AstParser/AstNode';
-import type { PHP } from './PHP';
+import type { Interpreter } from './Interpreter';
 
 export type Annotatable = ClassNode | MethodNode;
 
@@ -8,15 +8,15 @@ export type { Range };
 
 export interface Visitor {
     readonly nodeKinds: string[];
-    initialize?(php: PHP): void;
+    initialize?(interpreter: Interpreter): void;
     reset?(): void;
-    visit(node: AstNode, php: PHP): void;
+    visit(node: AstNode, interpreter: Interpreter): void;
 }
 
 export interface Resolver {
-    resolve(php: PHP): void;
+    resolve(interpreter: Interpreter): void;
     reset?(): void;
-    contribute?(result: Partial<FileInfo>, php: PHP): void;
+    contribute?(result: Partial<FileInfo>, interpreter: Interpreter): void;
 }
 
 export interface FileInfo {

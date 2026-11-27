@@ -6,13 +6,13 @@ import type {
     TraitUseNode,
 } from '../AstParser/AstNode';
 import { resolveLabels } from '../Expressions/resolveLabels';
+import type { Interpreter } from '../Interpreter';
 import { AnnotationParser } from '../Metadata/AnnotationParser';
 import { AttributeParser } from '../Metadata/AttributeParser';
 import type { Metadata } from '../Metadata/Metadata';
 import type { MetadataParser } from '../Metadata/MetadataParser';
 import { MetadataParserChain } from '../Metadata/MetadataParserChain';
 import { toAnnotations } from '../Metadata/toAnnotations';
-import type { PHP } from '../PHP';
 import type {
     ClassDescriptor,
     ConstantDescriptor,
@@ -39,9 +39,9 @@ export class PhpUnitResolver implements Resolver {
         this._classes = [];
     }
 
-    resolve(php: PHP): void {
-        this.ns = php.getResolver(FQNResolver);
-        const visitor = php.getVisitor(ClassVisitor);
+    resolve(interpreter: Interpreter): void {
+        this.ns = interpreter.getResolver(FQNResolver);
+        const visitor = interpreter.getVisitor(ClassVisitor);
         this._classes = visitor.nodes.map((node) =>
             this.buildClassDescriptor(node, visitor.scopeOf(node)),
         );

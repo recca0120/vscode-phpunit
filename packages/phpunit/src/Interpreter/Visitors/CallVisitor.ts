@@ -1,5 +1,5 @@
 import type { AstNode, CallNode, ExpressionStatementNode } from '../AstParser/AstNode';
-import type { PHP } from '../PHP';
+import type { Interpreter } from '../Interpreter';
 import type { Visitor } from '../types';
 
 export class CallVisitor implements Visitor {
@@ -15,7 +15,7 @@ export class CallVisitor implements Visitor {
         this._calls = [];
     }
 
-    visit(node: AstNode, _php: PHP): void {
+    visit(node: AstNode, _interpreter: Interpreter): void {
         const expr = (node as ExpressionStatementNode).expression;
         if (expr.kind === 'function_call_expression') {
             this._calls.push(expr as CallNode);

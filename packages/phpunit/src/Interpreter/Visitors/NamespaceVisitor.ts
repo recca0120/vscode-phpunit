@@ -1,6 +1,6 @@
 import type { AstNode, NamespaceNode, UseGroupNode } from '../AstParser/AstNode';
 import { getAstChildren } from '../AstParser/AstNode';
-import type { PHP } from '../PHP';
+import type { Interpreter } from '../Interpreter';
 import type { Range, Visitor } from '../types';
 
 export interface NamespaceScope {
@@ -54,7 +54,7 @@ export class NamespaceVisitor implements Visitor {
         this._current = scope;
     }
 
-    visit(node: AstNode, _php: PHP): void {
+    visit(node: AstNode, _interpreter: Interpreter): void {
         for (const item of (node as UseGroupNode).items) {
             this._current?.useMap.set(
                 item.alias ?? item.name.split('\\').pop() ?? item.name,

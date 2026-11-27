@@ -2,7 +2,7 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import { parsers } from '../../tests/support/parsers';
 import type { AstNode } from './AstParser/AstNode';
 import { initTreeSitter } from './AstParser/TreeSitter/TreeSitterParser';
-import { interpret } from './PHP';
+import { interpret } from './Interpreter';
 
 beforeAll(async () => initTreeSitter());
 

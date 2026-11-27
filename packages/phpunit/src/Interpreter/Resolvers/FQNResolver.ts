@@ -1,4 +1,4 @@
-import type { PHP } from '../PHP';
+import type { Interpreter } from '../Interpreter';
 import type { FileInfo, Range, Resolver } from '../types';
 import { type NamespaceScope, NamespaceVisitor } from '../Visitors/NamespaceVisitor';
 
@@ -17,8 +17,8 @@ export class FQNResolver implements Resolver {
         this._scopes = [];
     }
 
-    resolve(php: PHP): void {
-        this._scopes = php.getVisitor(NamespaceVisitor).scopes;
+    resolve(interpreter: Interpreter): void {
+        this._scopes = interpreter.getVisitor(NamespaceVisitor).scopes;
     }
 
     contribute(result: Partial<FileInfo>): void {

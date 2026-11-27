@@ -1,5 +1,5 @@
 import type { AstNode, ClassNode } from '../AstParser/AstNode';
-import type { PHP } from '../PHP';
+import type { Interpreter } from '../Interpreter';
 import type { Visitor } from '../types';
 import { type NamespaceScope, NamespaceVisitor } from './NamespaceVisitor';
 
@@ -22,8 +22,8 @@ export class ClassVisitor implements Visitor {
         return this._scopes.get(node);
     }
 
-    visit(node: AstNode, php: PHP): void {
+    visit(node: AstNode, interpreter: Interpreter): void {
         this._nodes.push(node as ClassNode);
-        this._scopes.set(node as ClassNode, php.getVisitor(NamespaceVisitor).current);
+        this._scopes.set(node as ClassNode, interpreter.getVisitor(NamespaceVisitor).current);
     }
 }

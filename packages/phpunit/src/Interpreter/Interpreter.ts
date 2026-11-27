@@ -9,7 +9,7 @@ import { NamespaceVisitor } from './Visitors/NamespaceVisitor';
 
 type Constructor<T> = abstract new (...args: never[]) => T;
 
-export class PHP {
+export class Interpreter {
     private visitors: Visitor[] = [];
     private resolvers: Resolver[] = [];
     private readonly visitorMap = new Map<Constructor<Visitor>, Visitor>();
@@ -76,18 +76,18 @@ export class PHP {
         return result as FileInfo;
     }
 
-    static create(): PHP {
-        const php = new PHP();
+    static create(): Interpreter {
+        const interpreter = new Interpreter();
 
-        php.useVisitor(new NamespaceVisitor());
-        php.useVisitor(new ClassVisitor());
-        php.useVisitor(new CallVisitor());
+        interpreter.useVisitor(new NamespaceVisitor());
+        interpreter.useVisitor(new ClassVisitor());
+        interpreter.useVisitor(new CallVisitor());
 
-        php.useResolver(new FQNResolver());
-        php.useResolver(new PhpUnitResolver());
-        php.useResolver(new PestResolver());
+        interpreter.useResolver(new FQNResolver());
+        interpreter.useResolver(new PhpUnitResolver());
+        interpreter.useResolver(new PestResolver());
 
-        return php;
+        return interpreter;
     }
 
     private dispatch(node: AstNode): void {
@@ -101,5 +101,5 @@ export class PHP {
     }
 }
 
-const _php = PHP.create();
-export const interpret = (ast: AstNode): FileInfo => _php.interpret(ast);
+const _interpreter = Interpreter.create();
+export const interpret = (ast: AstNode): FileInfo => _interpreter.interpret(ast);
