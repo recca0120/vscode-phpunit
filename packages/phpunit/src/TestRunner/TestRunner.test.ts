@@ -6,7 +6,7 @@ import { getPhpUnitVersion } from '../../tests/support/stubs';
 import { phpUnitProjectWin } from '../../tests/support/windowsPath';
 import { Configuration } from '../Configuration';
 import { VAR_PWD, VAR_WORKSPACE_FOLDER } from '../constants';
-import type { Path } from '../Path';
+import type { PathMappings } from '../Path';
 import { RemotePathMapper } from '../Path';
 import { TestCommand } from '../TestCommand';
 import { TestIdentifierFactory } from '../TestIdentifier/TestIdentifierFactory';
@@ -364,7 +364,7 @@ describe('TestRunner Test', () => {
         const command = new TestCommand(
             configuration,
             options,
-            new RemotePathMapper(options, configuration.get('paths') as Path),
+            new RemotePathMapper(options, configuration.get('paths') as PathMappings),
         );
         const expected = [
             'foo',
@@ -415,7 +415,7 @@ describe('TestRunner Test', () => {
             let command = new TestCommand(
                 configuration,
                 spawnOptions,
-                new RemotePathMapper(spawnOptions, configuration.get('paths') as Path),
+                new RemotePathMapper(spawnOptions, configuration.get('paths') as PathMappings),
             );
 
             const runTest = async (

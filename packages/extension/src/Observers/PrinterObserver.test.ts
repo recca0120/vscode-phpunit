@@ -1,7 +1,7 @@
 import {
     Configuration,
     type OutputWriter,
-    type Path,
+    type PathMappings,
     PHPUnitXML,
     PRESET_PROGRESS,
     Printer,
@@ -76,7 +76,7 @@ describe.each(writers)('PrinterObserver with $writerName', ({ createWriter }) =>
                 const command = new TestCommand(
                     configuration,
                     options,
-                    new RemotePathMapper(options, configuration.get('paths') as Path),
+                    new RemotePathMapper(options, configuration.get('paths') as PathMappings),
                 );
                 await testRunner.run(command.withArguments([file, filter].join(' '))).run();
             }

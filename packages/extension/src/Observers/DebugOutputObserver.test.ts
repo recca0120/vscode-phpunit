@@ -1,6 +1,6 @@
 import {
     Configuration,
-    type Path,
+    type PathMappings,
     RemotePathMapper,
     TeamcityEvent,
     TestCommand,
@@ -22,7 +22,7 @@ const createCommand = (command = 'php') => {
     return new TestCommand(
         config,
         options,
-        new RemotePathMapper(options, config.get('paths') as Path),
+        new RemotePathMapper(options, config.get('paths') as PathMappings),
     );
 };
 
