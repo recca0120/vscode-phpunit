@@ -7,7 +7,10 @@ export class ErrorDialogObserver implements TestRunnerObserver {
 
     async error(error: string) {
         error = stripAnsi(error);
-        if (error.includes('Pest\\Exceptions\\InvalidPestCommand')) {
+        if (
+            error.includes('Pest\\Exceptions\\InvalidPestCommand') ||
+            error.includes('Please run [./vendor/bin/pest] instead.')
+        ) {
             const command = 'vendor/bin/pest';
             const message = `Update "phpunit.phpunit" to ${command} ?`;
             const options = { modal: true, detail: error };
