@@ -1,6 +1,6 @@
 export * from './Composer';
 export * from './Configuration';
-export { EOL } from './constants';
+export { EOL, VAR_WORKSPACE_FOLDER } from './constants';
 export {
     ChainAstParser,
     initTreeSitter,

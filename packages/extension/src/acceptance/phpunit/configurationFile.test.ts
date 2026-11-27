@@ -1,7 +1,7 @@
 import { mkdir, mkdtemp, realpath, rm, unlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
-import { initTreeSitter } from '@vscode-phpunit/phpunit';
+import { initTreeSitter, VAR_WORKSPACE_FOLDER } from '@vscode-phpunit/phpunit';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 import { type ExtensionContext, type TestItem, Uri, workspace } from 'vscode';
 import { createExtensionContext } from '../../../fakes/extensionContext';
@@ -204,6 +204,49 @@ describe('phpunit.xml and the files it points to', () => {
             await createFile('phpunit.xml', testsuite('a'));
 
             await vi.waitFor(() => expect(filesOf(items)).toEqual([join(tmp, 'a/ATest.php')]));
+        });
+
+        it.each([
+            ['an absolute path', (root: string) => join(root, 'phpunit.custom.xml')],
+            [VAR_WORKSPACE_FOLDER, () => `${VAR_WORKSPACE_FOLDER}/phpunit.custom.xml`],
+        ])('reloads when the file given with -c as %s changes', async (_, configurationFile) => {
+            await writeFiles({
+                'phpunit.custom.xml': testsuite('a'),
+                'a/ATest.php': testCase('ATest'),
+                'b/BTest.php': testCase('BTest'),
+            });
+            await openWorkspace({
+                root: tmp,
+                settings: { php: 'php', args: ['-c', configurationFile(tmp)] },
+            });
+            const extension = await activateExtension(context);
+            await extension.resolve();
+            const { items } = extension.controller;
+            expect(filesOf(items)).toEqual([join(tmp, 'a/ATest.php')]);
+
+            await changeFile('phpunit.custom.xml', testsuite('b'));
+
+            await vi.waitFor(() => expect(filesOf(items)).toEqual([join(tmp, 'b/BTest.php')]));
+        });
+
+        it('reloads when the file given with -c outside the workspace folder changes', async () => {
+            await writeFiles({
+                'phpunit.xml': testsuite('proj/a'),
+                'proj/a/ATest.php': testCase('ATest'),
+                'proj/b/BTest.php': testCase('BTest'),
+            });
+            await openWorkspace({
+                root: join(tmp, 'proj'),
+                settings: { php: 'php', args: ['-c', '../phpunit.xml'] },
+            });
+            const extension = await activateExtension(context);
+            await extension.resolve();
+            const { items } = extension.controller;
+            expect(filesOf(items)).toEqual([join(tmp, 'proj/a/ATest.php')]);
+
+            await changeFile('phpunit.xml', testsuite('proj/b'));
+
+            await vi.waitFor(() => expect(filesOf(items)).toEqual([join(tmp, 'proj/b/BTest.php')]));
         });
 
         it('lists the tests as a start without phpunit.xml does once phpunit.xml is deleted', async () => {

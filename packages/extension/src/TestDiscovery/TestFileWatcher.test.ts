@@ -26,7 +26,9 @@ function createMockDiscovery(
             pattern: new RelativePattern('/workspace', '**/*.php'),
             exclude: new RelativePattern('/workspace', 'vendor/**'),
         }),
-        getConfigFilePattern: vi.fn().mockReturnValue(configFilePattern),
+        getConfigFilePattern: vi
+            .fn()
+            .mockReturnValue(new RelativePattern('/workspace', configFilePattern)),
         reloadAll: vi.fn().mockResolvedValue(undefined),
     } satisfies Partial<TestFileDiscovery> as unknown as TestFileDiscovery;
 }

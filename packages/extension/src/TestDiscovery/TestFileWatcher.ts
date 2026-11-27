@@ -1,5 +1,5 @@
 import { inject, injectable } from 'inversify';
-import { type Disposable, type EventEmitter, RelativePattern, type Uri, workspace } from 'vscode';
+import { type Disposable, type EventEmitter, type Uri, workspace } from 'vscode';
 import { TestTree } from '../TestTree';
 import { TYPES } from '../types';
 import { TestFileDiscovery } from './TestFileDiscovery';
@@ -19,10 +19,8 @@ export class TestFileWatcher {
         this.dispose();
         await this.createTestWatcher();
 
-        const { workspaceFolder } = await this.testFileDiscovery.getWorkspaceTestPattern();
-        const configPattern = this.testFileDiscovery.getConfigFilePattern();
         const configWatcher = workspace.createFileSystemWatcher(
-            new RelativePattern(workspaceFolder, configPattern),
+            this.testFileDiscovery.getConfigFilePattern(),
         );
         const reload = async () => {
             await this.testFileDiscovery.reloadAll();
