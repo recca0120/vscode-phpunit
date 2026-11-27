@@ -1,6 +1,7 @@
 import { execSync } from 'node:child_process';
+import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { platform, tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { basename, dirname, join, resolve } from 'node:path';
 import { defineConfig } from '@vscode/test-cli';
 
 const fixturesPath = resolve(import.meta.dirname, '../phpunit/tests/fixtures');
@@ -10,6 +11,18 @@ function userDataDirArgs(label) {
     const base = platform() === 'darwin' ? (process.env.RUNNER_TEMP ?? '/tmp') : tmpdir();
 
     return ['--user-data-dir', join(base, 'vsc-e2e', label)];
+}
+
+function temporaryWorkspace(source) {
+    const workspace = JSON.parse(readFileSync(source, 'utf8'));
+    workspace.folders = workspace.folders.map((folder) => ({
+        ...folder,
+        path: resolve(dirname(source), folder.path),
+    }));
+    const target = join(mkdtempSync(join(tmpdir(), 'vsc-e2e-workspace-')), basename(source));
+    writeFileSync(target, JSON.stringify(workspace, null, 4));
+
+    return target;
 }
 
 function detectPhpUnitStubs() {
@@ -131,7 +144,9 @@ const issue381Root = join(fixturesPath, 'issue-381/php-project');
 const issue381Binary = 'vendor/bin/phpunit';
 try {
     execSync(`php ${issue381Binary} --version`, { cwd: issue381Root, timeout: 10000 });
-    const workspacePath = join(fixturesPath, 'workspaces/issue-381-workspace.code-workspace');
+    const workspacePath = temporaryWorkspace(
+        join(fixturesPath, 'workspaces/issue-381-workspace.code-workspace'),
+    );
 
     configs.push({
         label: 'issue-381',
