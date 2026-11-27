@@ -1,4 +1,4 @@
-import { datasetExpander } from '../Dataset/DatasetExpander';
+import { datasetNaming } from '../Dataset/DatasetNaming';
 import type { TestResultIdentify } from '../TestOutput';
 import { type TestDefinition, TestType } from '../types';
 
@@ -52,7 +52,7 @@ export abstract class TestIdentifier {
 
     protected getMethodName(testDefinition: Pick<TestDefinition, 'methodName' | 'annotations'>) {
         let { methodName, annotations } = testDefinition;
-        const { parentId, dataset } = datasetExpander.parse(methodName ?? '');
+        const { parentId, dataset } = datasetNaming.parse(methodName ?? '');
         if (dataset) {
             methodName = parentId;
         }

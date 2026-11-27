@@ -1,4 +1,4 @@
-import { datasetExpander } from '../../Dataset/DatasetExpander';
+import { datasetNaming } from '../../Dataset/DatasetNaming';
 import type { Annotations } from '../../types';
 import type { Metadata } from './Metadata';
 
@@ -21,9 +21,7 @@ export function toAnnotations(metadata: Metadata[]): Annotations {
         } else if (item.kind === 'testWith') {
             append(
                 'dataset',
-                item.name
-                    ? datasetExpander.named(item.name)
-                    : datasetExpander.indexed(testWithIndex),
+                item.name ? datasetNaming.named(item.name) : datasetNaming.indexed(testWithIndex),
             );
             testWithIndex++;
         }

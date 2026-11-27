@@ -1,4 +1,4 @@
-import { datasetExpander } from '../../Dataset/DatasetExpander';
+import { datasetNaming } from '../../Dataset/DatasetNaming';
 import type { TestResultCache } from '../TestResultCache';
 import { TeamcityEvent, type TestResult } from '../types';
 
@@ -6,7 +6,7 @@ function fixDataSet(locationHint: string) {
     const matched = locationHint.match(/(?<description>.+)\swith\s\('(?<data>.+)'\)/);
 
     return matched?.groups?.description
-        ? `${matched.groups.description} with ${datasetExpander.named(`('${matched.groups.data}')`)}`
+        ? `${matched.groups.description} with ${datasetNaming.named(`('${matched.groups.data}')`)}`
         : locationHint;
 }
 

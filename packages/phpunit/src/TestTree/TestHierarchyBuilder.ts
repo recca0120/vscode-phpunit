@@ -1,4 +1,4 @@
-import { datasetExpander } from '../Dataset/DatasetExpander';
+import { datasetNaming } from '../Dataset/DatasetNaming';
 import type { PHPUnitXML } from '../PHPUnitXML/PHPUnitXML';
 import type { TestIdentifier } from '../TestIdentifier/TestIdentifier';
 import { TestIdentifierFactory } from '../TestIdentifier/TestIdentifierFactory';
@@ -117,7 +117,7 @@ export abstract class TestHierarchyBuilder<T extends TestTreeItem<T>> {
         const dataset = (test.annotations?.dataset as string[] | undefined) ?? [];
         const allChildren = [
             ...(test.children ?? []),
-            ...datasetExpander.fromAnnotations(test, dataset),
+            ...datasetNaming.fromAnnotations(test, dataset),
         ];
 
         if (allChildren.length === 0) {

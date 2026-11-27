@@ -1,4 +1,4 @@
-import { datasetExpander } from '../../../../Dataset/DatasetExpander';
+import { datasetNaming } from '../../../../Dataset/DatasetNaming';
 import type { AstNode, CallNode } from '../../../AstParser/AstNode';
 import type { Context, Expression } from '../../Expression';
 
@@ -19,7 +19,7 @@ class ArrayCombineExpression implements Expression<string[]> {
             return undefined;
         }
         return [...resolved.values()].map((item, i) =>
-            typeof item === 'string' ? datasetExpander.named(item) : datasetExpander.indexed(i),
+            typeof item === 'string' ? datasetNaming.named(item) : datasetNaming.indexed(i),
         );
     }
 }
