@@ -18,5 +18,5 @@
         "ignoreDeprecations": "6.0"
     },
     "include": ["src/**/*.ts", "tests/**/*.ts"],
-    "exclude": ["tests/fixtures/**/*", "tests/__mocks__/*"]
+    "exclude": ["tests/fixtures/**/*"]
 }

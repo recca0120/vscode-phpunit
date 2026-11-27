@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { pestProject } from '../../tests/utils';
+import { pestProject } from '../../tests/support/fixtures';
 import { TestOutputParser } from './TestOutputParser';
 import { TeamcityEvent } from './types';
 

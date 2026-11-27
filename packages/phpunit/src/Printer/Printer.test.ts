@@ -1,6 +1,6 @@
 import styles from 'ansi-styles';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { phpUnitProject } from '../../tests/utils';
+import { phpUnitProject } from '../../tests/support/fixtures';
 import { PHPUnitXML } from '../PHPUnitXML/PHPUnitXML';
 import {
     TeamcityEvent,

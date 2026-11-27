@@ -23,15 +23,6 @@
                     "correctness": { "noUnusedFunctionParameters": "off" }
                 }
             }
-        },
-        {
-            "includes": ["**/__mocks__/**"],
-            "linter": {
-                "rules": {
-                    "suspicious": { "noExplicitAny": "off", "noRedeclare": "off" },
-                    "style": { "noNonNullAssertion": "off" }
-                }
-            }
         }
     ]
 }

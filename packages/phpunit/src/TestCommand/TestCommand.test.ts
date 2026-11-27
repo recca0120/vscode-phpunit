@@ -1,6 +1,7 @@
 import { spawnSync } from 'node:child_process';
 import { describe, expect, it } from 'vitest';
-import { phpUnitProject, phpUnitProjectWin } from '../../tests/utils';
+import { phpUnitProject } from '../../tests/support/fixtures';
+import { phpUnitProjectWin } from '../../tests/support/windowsPath';
 import { Configuration } from '../Configuration';
 import { CMD_TEMPLATE, VAR_PWD, VAR_WORKSPACE_FOLDER } from '../constants';
 import { RemotePathMapper } from '../Path';
