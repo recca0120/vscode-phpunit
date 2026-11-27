@@ -461,7 +461,7 @@ describe.each(parsers)('InheritanceResolver on parsed test files (%s)', (_name, 
 namespace Tests;
 use PHPUnit\\Framework\\TestCase;
 abstract class AbstractTest extends TestCase {
-public function test_abstract() {}
+    public function test_abstract() {}
 }`,
                 },
                 {
@@ -505,7 +505,7 @@ class ConcreteFromAbstractTest extends AbstractTest {
 namespace Tests;
 use PHPUnit\\Framework\\TestCase;
 abstract class AbstractTest extends TestCase {
-public function test_abstract() {}
+    public function test_abstract() {}
 }`,
                 },
                 {
@@ -513,9 +513,9 @@ public function test_abstract() {}
                     content: `<?php
 namespace Tests;
 class ConcreteWithOwnTest extends AbstractTest {
-public function test_own_method() {
-    $this->assertTrue(true);
-}
+    public function test_own_method() {
+        $this->assertTrue(true);
+    }
 }`,
                 },
             ],
@@ -544,7 +544,7 @@ public function test_own_method() {
 namespace Tests;
 use PHPUnit\\Framework\\TestCase;
 class UseTestCaseTest extends TestCase {
-public function test_something() {}
+    public function test_something() {}
 }`,
                 },
             ],
@@ -564,7 +564,7 @@ public function test_something() {}
                     content: `<?php
 namespace Tests;
 class FQNTest extends \\PHPUnit\\Framework\\TestCase {
-public function test_fqn() {}
+    public function test_fqn() {}
 }`,
                 },
             ],
@@ -586,17 +586,17 @@ namespace Tests;
 use PHPUnit\\Framework\\TestCase;
 
 trait TestHelperTrait {
-public function test_from_trait() {
-    $this->assertTrue(true);
-}
+    public function test_from_trait() {
+        $this->assertTrue(true);
+    }
 }
 
 class TraitMethodTest extends TestCase {
-use TestHelperTrait;
+    use TestHelperTrait;
 
-public function test_own() {
-    $this->assertTrue(true);
-}
+    public function test_own() {
+        $this->assertTrue(true);
+    }
 }`,
                 },
             ],
@@ -626,20 +626,20 @@ namespace Tests;
 use PHPUnit\\Framework\\TestCase;
 
 trait TraitA {
-public function test_shared() {}
-public function test_a_only() {}
+    public function test_shared() {}
+    public function test_a_only() {}
 }
 
 trait TraitB {
-public function test_shared() {}
-public function test_b_only() {}
+    public function test_shared() {}
+    public function test_b_only() {}
 }
 
 class TraitConflictTest extends TestCase {
-use TraitA, TraitB {
-    TraitA::test_shared insteadof TraitB;
-    TraitB::test_shared as test_shared_from_b;
-}
+    use TraitA, TraitB {
+        TraitA::test_shared insteadof TraitB;
+        TraitB::test_shared as test_shared_from_b;
+    }
 }`,
                 },
             ],
@@ -666,7 +666,7 @@ use TraitA, TraitB {
 namespace Tests;
 use PHPUnit\\Framework\\TestCase;
 abstract class AbstractTest extends TestCase {
-public function test_override() {}
+    public function test_override() {}
 }`,
                 },
                 {
@@ -674,9 +674,9 @@ public function test_override() {}
                     content: `<?php
 namespace Tests;
 class OverrideTest extends AbstractTest {
-public function test_override() {
-    $this->assertTrue(true);
-}
+    public function test_override() {
+        $this->assertTrue(true);
+    }
 }`,
                 },
             ],
