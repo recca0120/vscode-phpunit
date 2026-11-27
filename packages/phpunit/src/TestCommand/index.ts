@@ -1,4 +1,4 @@
-export * from './Environment';
+export * from './CommandLauncher';
 export * from './Filter';
 export * from './Invocation';
 export * from './Option';
