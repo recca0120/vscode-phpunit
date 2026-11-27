@@ -83,7 +83,7 @@ describe('Printer printed output', () => {
         expect(output).toEqual(`${EOL}${ansiInput}${EOL}`);
     });
 
-    it('testSuiteFinished', () => {
+    it('prints nothing when a suite finishes', () => {
         const output = printer.testSuiteFinished({
             event: TeamcityEvent.testSuiteFinished,
             id: 'Recca0120\\VSCode\\Tests\\AssertionsTest',
