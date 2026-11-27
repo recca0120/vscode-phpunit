@@ -140,6 +140,46 @@ if (phpUnitStubs.length > 0 && pestStubs.length > 0) {
     });
 }
 
+if (phpUnitStubs.length > 0) {
+    const stub = phpUnitStubs.at(-1);
+    const root = join(fixturesPath, 'phpunit-regressions');
+    configs.push({
+        label: 'regressions:phpunit',
+        files: 'out/tests/suite-regressions/**/*.test.js',
+        mocha: mochaOpts,
+        launchArgs: [root, '--disable-extensions', ...userDataDirArgs('regressions-phpunit')],
+        env: {
+            STUB_TYPE: 'phpunit',
+            STUB_VERSION: stub.name,
+            STUB_BINARY: `../phpunit-stub/${stub.binary}`,
+            STUB_ARGS: JSON.stringify(['-c', join(root, 'regressions/phpunit.xml')]),
+            EXPECTED_TEST_COUNT: '14',
+        },
+    });
+}
+
+if (pestStubs.length > 0) {
+    const stub = pestStubs.at(-1);
+    const root = join(fixturesPath, 'pest-stub');
+    configs.push({
+        label: 'regressions:pest',
+        files: 'out/tests/suite-regressions/**/*.test.js',
+        mocha: mochaOpts,
+        launchArgs: [root, '--disable-extensions', ...userDataDirArgs('regressions-pest')],
+        env: {
+            STUB_TYPE: 'pest',
+            STUB_VERSION: stub.name,
+            STUB_BINARY: stub.binary,
+            STUB_ARGS: JSON.stringify([
+                '-c',
+                join(root, `${stub.name}/phpunit.regressions.xml`),
+                '--test-directory=../tests',
+            ]),
+            EXPECTED_TEST_COUNT: '1',
+        },
+    });
+}
+
 const issue381Root = join(fixturesPath, 'issue-381/php-project');
 const issue381Binary = 'vendor/bin/phpunit';
 try {

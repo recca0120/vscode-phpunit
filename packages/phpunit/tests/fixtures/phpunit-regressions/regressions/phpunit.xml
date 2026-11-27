@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit>
+    <testsuites>
+        <testsuite name="regressions">
+            <directory>../regressions-tests</directory>
+        </testsuite>
+    </testsuites>
+</phpunit>
