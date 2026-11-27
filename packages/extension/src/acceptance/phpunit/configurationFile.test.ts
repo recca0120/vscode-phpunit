@@ -352,6 +352,31 @@ describe('phpunit.xml and the files it points to', () => {
                 { timeout: 10_000 },
             );
         });
+
+        it('marks the tests of a file created during a continuous run of everything', async () => {
+            await writeFiles({
+                'phpunit.xml': testsuite('tests'),
+                'tests/ATest.php': testCase('ATest'),
+            });
+            await openWorkspace({ root: tmp, settings: { php: 'php', phpunit } });
+            const extension = await activateExtension(context);
+            await extension.resolve();
+            await extension.run(undefined, { continuous: true });
+
+            await createFile('tests/BTest.php', testCase('BTest'));
+
+            await vi.waitFor(
+                () => {
+                    const [testRun] = extension.testRuns();
+                    expect(testRun.end).toHaveBeenCalled();
+                    const passed = (testRun.passed as Mock).mock.calls.map(
+                        ([item]) => (item as TestItem).id,
+                    );
+                    expect(passed).toEqual(expect.arrayContaining(['A::It works', 'B::It works']));
+                },
+                { timeout: 10_000 },
+            );
+        });
     });
 
     describe('a configuration file outside the workspace folder', () => {

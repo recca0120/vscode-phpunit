@@ -230,6 +230,26 @@ if (phpUnitStubs.length > 0) {
     });
 }
 
+if (phpUnitStubs.length > 0) {
+    const stub = phpUnitStubs.at(-1);
+    const phpunit = join(fixturesPath, 'phpunit-stub', stub.binary);
+    const root = watchingWorkspace('create-during-continuous-run', {
+        'phpunit.xml': testsuite('tests'),
+        'tests/ATest.php': testCase('ATest'),
+        '.vscode/settings.json': JSON.stringify({ 'phpunit.phpunit': phpunit }),
+    });
+    configs.push({
+        label: 'watching:create-during-continuous-run',
+        files: 'out/tests/suite-watching/createDuringContinuousRun.test.js',
+        mocha: mochaOpts,
+        launchArgs: [
+            root,
+            '--disable-extensions',
+            ...userDataDirArgs('create-during-continuous-run'),
+        ],
+    });
+}
+
 const issue381Root = join(fixturesPath, 'issue-381/php-project');
 const issue381Binary = 'vendor/bin/phpunit';
 try {

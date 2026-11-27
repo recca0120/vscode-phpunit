@@ -48,8 +48,8 @@ export class TestFileWatcher {
 
         const { pattern } = await this.testFileDiscovery.getWorkspaceTestPattern();
         const watcher = workspace.createFileSystemWatcher(pattern);
-        watcher.onDidCreate((uri) => {
-            this.testTree.add(uri);
+        watcher.onDidCreate(async (uri) => {
+            await this.testTree.add(uri);
             this.fileChangedEmitter.fire(uri);
         });
         watcher.onDidChange((uri) => {
