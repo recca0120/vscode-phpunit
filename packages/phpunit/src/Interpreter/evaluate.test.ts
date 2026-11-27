@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, it } from 'vitest';
-import { parsers } from '../../tests/support/parsers';
+import { parsers } from '../../test-support/parsers';
 import type {
     AstNode,
     CallNode,

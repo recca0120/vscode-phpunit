@@ -1,7 +1,7 @@
 import os from 'node:os';
 import { describe, expect, it } from 'vitest';
-import { phpUnitProject } from '../../tests/support/fixtures';
-import { phpUnitProjectWin } from '../../tests/support/windowsPath';
+import { phpUnitProject } from '../../test-support/fixtures';
+import { phpUnitProjectWin } from '../../test-support/windowsPath';
 import {
     VAR_PATH_SEPARATOR,
     VAR_PATH_SEPARATOR_SHORT,

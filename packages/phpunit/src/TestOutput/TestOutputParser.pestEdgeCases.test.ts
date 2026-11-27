@@ -1,5 +1,5 @@
 import { beforeEach, describe, it } from 'vitest';
-import { expectParsedBy } from '../../tests/support/outputParser';
+import { expectParsedBy } from '../../test-support/outputParser';
 import { TestOutputParser } from './TestOutputParser';
 import { TeamcityEvent } from './types';
 

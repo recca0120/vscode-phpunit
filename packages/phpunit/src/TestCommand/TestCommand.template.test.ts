@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { givenCommand as givenSharedCommand } from '../../tests/support/testCommand';
+import { givenCommand as givenSharedCommand } from '../../test-support/testCommand';
 import { CMD_TEMPLATE } from '../constants';
 
 describe('TestCommand', () => {

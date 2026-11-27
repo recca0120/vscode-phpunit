@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { givenCommand } from '../../tests/support/testCommand';
+import { givenCommand } from '../../test-support/testCommand';
 import { TeamcityEvent, type TestFailed } from '../TestOutput/types';
 import { toLocalResult } from './toLocalResult';
 

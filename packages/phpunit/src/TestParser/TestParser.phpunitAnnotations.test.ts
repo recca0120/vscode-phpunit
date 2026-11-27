@@ -1,8 +1,8 @@
 import { readFile } from 'node:fs/promises';
 import { beforeAll, describe, expect, it } from 'vitest';
-import { phpUnitProject } from '../../tests/support/fixtures';
-import { parsers } from '../../tests/support/parsers';
-import { findTest, parseTestFile } from '../../tests/support/parsing';
+import { phpUnitProject } from '../../test-support/fixtures';
+import { parsers } from '../../test-support/parsers';
+import { findTest, parseTestFile } from '../../test-support/parsing';
 import type { AstParser } from '../Interpreter/AstParser/AstParser';
 import { initTreeSitter } from '../Interpreter/AstParser/TreeSitter/TreeSitterParser';
 import { TestType } from '../types';

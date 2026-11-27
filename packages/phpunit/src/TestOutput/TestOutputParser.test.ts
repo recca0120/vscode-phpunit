@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { phpUnitProject } from '../../tests/support/fixtures';
+import { phpUnitProject } from '../../test-support/fixtures';
 import { TeamcityEvent } from '.';
 import { TestOutputParser } from './TestOutputParser';
 

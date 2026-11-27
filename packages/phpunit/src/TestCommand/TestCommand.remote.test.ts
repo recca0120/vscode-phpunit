@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { phpUnitProject } from '../../tests/support/fixtures';
-import { givenCommand } from '../../tests/support/testCommand';
-import { phpUnitProjectWin } from '../../tests/support/windowsPath';
+import { phpUnitProject } from '../../test-support/fixtures';
+import { givenCommand } from '../../test-support/testCommand';
+import { phpUnitProjectWin } from '../../test-support/windowsPath';
 import { VAR_PWD, VAR_WORKSPACE_FOLDER } from '../constants';
 
 describe('TestCommand', () => {
