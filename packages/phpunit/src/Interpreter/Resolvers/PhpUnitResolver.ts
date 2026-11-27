@@ -1,4 +1,3 @@
-import type { TraitAdaptation } from '../../TestParser/ClassInfo';
 import type {
     AstNode,
     ClassNode,
@@ -20,6 +19,7 @@ import type {
     FileInfo,
     MethodDescriptor,
     Resolver,
+    TraitAdaptation,
     TraitUseDescriptor,
 } from '../types';
 import { ClassVisitor } from '../Visitors/ClassVisitor';

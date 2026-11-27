@@ -1,6 +1,12 @@
 export * from './Composer';
 export * from './Configuration';
 export { EOL } from './constants';
+export {
+    ChainAstParser,
+    initTreeSitter,
+    PhpParserAstParser,
+    TreeSitterAstParser,
+} from './Interpreter/AstParser';
 export * from './Path';
 export * from './PHPUnitXML';
 export * from './Printer';

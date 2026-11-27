@@ -1,5 +1,5 @@
+import { datasetExpander } from '../Dataset/DatasetExpander';
 import type { TestResultIdentify } from '../TestOutput';
-import { datasetExpander } from '../TestParser/DatasetExpander';
 import { type TestDefinition, TestType } from '../types';
 
 function lastTestdox(annotations?: Record<string, unknown>): string | undefined {

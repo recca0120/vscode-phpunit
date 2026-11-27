@@ -1,5 +1,5 @@
+import { datasetExpander } from '../../Dataset/DatasetExpander';
 import { TestIdentifier } from '../../TestIdentifier/TestIdentifier';
-import { datasetExpander } from '../../TestParser/DatasetExpander';
 import { DescribeFilterStrategy } from './DescribeFilterStrategy';
 
 export class DatasetFilterStrategy extends DescribeFilterStrategy {
