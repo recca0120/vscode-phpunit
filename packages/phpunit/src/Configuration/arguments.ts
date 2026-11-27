@@ -1,7 +1,3 @@
-import { access } from 'node:fs/promises';
-
-export const EOL = '\r\n';
-
 const aliases: Record<string, string> = { c: 'configuration' };
 
 export function stripQuotes(s: string): string {
@@ -133,66 +129,3 @@ function parseShortOption(
         option: longKey ? `--${longKey}=${nextVal}` : `-${short} ${nextVal}`,
     };
 }
-
-export async function checkFileExists(filePath: string): Promise<boolean> {
-    try {
-        await access(filePath);
-        return true;
-    } catch {
-        return false;
-    }
-}
-
-export async function findAsyncSequential<T>(
-    array: T[],
-    predicate: (t: T) => Promise<boolean>,
-): Promise<T | undefined> {
-    for (const t of array) {
-        if (await predicate(t)) {
-            return t;
-        }
-    }
-    return undefined;
-}
-
-export const capitalize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1);
-export const uncapitalize = (str: string) => str.charAt(0).toLowerCase() + str.slice(1);
-export const snakeCase = (str: string) =>
-    str
-        .replace(/([a-z])([A-Z])/g, '$1_$2')
-        .replace(/[\s-]+/g, '_')
-        .toLowerCase();
-export const camelCase = (str: string) =>
-    str
-        .toLowerCase()
-        .replace(/([-_ \s]+[a-z])/g, (group) => group.toUpperCase().replace(/[-_ \s]/g, ''));
-export const titleCase = (str: string) =>
-    capitalize(
-        str
-            .replace(/([A-Z]+|[_\-\s]+([A-Z]+|[a-z]))/g, (_: string, matched: string) => {
-                return ` ${matched.trim().replace(/[_-]/, '').toUpperCase()}`;
-            })
-            .trim(),
-    );
-
-export const splitFQN = (fqn: string): { namespace: string; className: string } => {
-    const parts = fqn.split('\\');
-    const className = parts.pop() ?? '';
-    return { namespace: parts.join('\\'), className };
-};
-
-export const cloneInstance = <T extends object>(obj: T): T =>
-    Object.assign(Object.create(Object.getPrototypeOf(obj)), obj);
-
-function semverCompare(a: string, b: string): number {
-    const pa = a.split('.').map(Number);
-    const pb = b.split('.').map(Number);
-    for (let i = 0; i < 3; i++) {
-        const diff = (pa[i] ?? 0) - (pb[i] ?? 0);
-        if (diff !== 0) return diff;
-    }
-    return 0;
-}
-
-export const semverGte = (a: string, b: string) => semverCompare(a, b) >= 0;
-export const semverLt = (a: string, b: string) => semverCompare(a, b) < 0;

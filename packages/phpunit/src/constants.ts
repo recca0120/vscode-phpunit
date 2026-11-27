@@ -25,3 +25,5 @@ export const VAR_PHPUNITARGS = '${phpunitargs}';
 export const CMD_TEMPLATE = `${VAR_PHP} ${VAR_PHPARGS} ${VAR_PHPUNIT} ${VAR_PHPUNITARGS}`;
 
 export const CMD_TEMPLATE_QUOTED = `"${VAR_PHP} ${VAR_PHPARGS} ${VAR_PHPUNIT} ${VAR_PHPUNITARGS}"`;
+
+export const EOL = '\r\n';

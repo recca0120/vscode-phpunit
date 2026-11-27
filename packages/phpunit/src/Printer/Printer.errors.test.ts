@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { phpUnitProject } from '../../tests/support/fixtures';
+import { EOL } from '../constants';
 import { PHPUnitXML } from '../PHPUnitXML/PHPUnitXML';
 import { TeamcityEvent } from '../TestOutput/types';
-import { EOL } from '../utils';
 import { Printer } from './Printer';
 import { PRESET_COLLISION, type PrinterFormat, resolveFormat } from './PrinterConfig';
 import { fileFormat } from './SourceFileReader';

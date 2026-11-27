@@ -1,11 +1,7 @@
 import { join } from 'node:path';
 import { VAR_WORKSPACE_FOLDER } from '../constants';
-import {
-    checkFileExists,
-    findAsyncSequential,
-    parseArgumentGroups,
-    quoteInlineOptionValue,
-} from '../utils';
+import { checkFileExists, findAsyncSequential } from '../utils';
+import { parseArgumentGroups, quoteInlineOptionValue } from './arguments';
 import { BinaryDetector } from './BinaryDetector';
 
 interface ConfigurationItem {
