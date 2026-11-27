@@ -1,4 +1,11 @@
-import type { Teamcity } from '../types';
+export interface Teamcity {
+    [key: string]: string | number;
+
+    name: string;
+    locationHint: string;
+    message: string;
+    details: string;
+}
 
 const unescapeMap: Record<string, string> = {
     '||': '|',

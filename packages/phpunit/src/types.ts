@@ -1,6 +1,3 @@
-export const PHPUNIT_TESTCASE_FQN = 'PHPUnit\\Framework\\TestCase';
-export const PEST_PREFIX = 'P\\';
-
 export type Position = {
     character: number;
     line: number;
@@ -52,12 +49,3 @@ export type TestDefinition = {
     annotations?: Annotations;
     testsuite?: string;
 };
-
-export interface Teamcity {
-    [key: string]: string | number;
-
-    name: string;
-    locationHint: string;
-    message: string;
-    details: string;
-}

@@ -1,6 +1,6 @@
-import type { TestFailed, TestIgnored } from '../TestOutput';
-import type { TestResultCache } from '../TestOutput/TestResultCache';
-import { TestIdentifierFactory } from './TestIdentifierFactory';
+import { TestIdentifierFactory } from '../../TestIdentifier/TestIdentifierFactory';
+import type { TestResultCache } from '../TestResultCache';
+import type { TestFailed, TestIgnored } from '../types';
 
 export const PHPUnitFixer = {
     fixNoTestStarted(cache: TestResultCache, testResult: TestFailed | TestIgnored) {

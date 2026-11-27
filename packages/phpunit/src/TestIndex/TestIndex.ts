@@ -1,10 +1,10 @@
 import { URI } from 'vscode-uri';
 import { ComposerAutoload } from '../Composer/ComposerAutoload';
+import { PHPUNIT_TESTCASE_FQN } from '../constants';
 import type { PHPUnitXML, TestDefinition, TestParser } from '../index';
 import type { TestStarted } from '../TestOutput';
 import type { ClassInfo } from '../TestParser/ClassInfo';
 import { datasetExpander } from '../TestParser/DatasetExpander';
-import { PHPUNIT_TESTCASE_FQN } from '../types';
 import { checkFileExists } from '../utils';
 import { ClassRegistry } from './ClassRegistry';
 import type { IndexChange } from './IndexChange';

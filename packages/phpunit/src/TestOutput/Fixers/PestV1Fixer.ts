@@ -1,6 +1,6 @@
-import { TeamcityEvent, type TestResult } from '../TestOutput';
-import type { TestResultCache } from '../TestOutput/TestResultCache';
-import { datasetExpander } from '../TestParser/DatasetExpander';
+import { datasetExpander } from '../../TestParser/DatasetExpander';
+import type { TestResultCache } from '../TestResultCache';
+import { TeamcityEvent, type TestResult } from '../types';
 
 function fixDataSet(locationHint: string) {
     const matched = locationHint.match(/(?<description>.+)\swith\s\('(?<data>.+)'\)/);

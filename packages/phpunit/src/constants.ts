@@ -27,3 +27,6 @@ export const CMD_TEMPLATE = `${VAR_PHP} ${VAR_PHPARGS} ${VAR_PHPUNIT} ${VAR_PHPU
 export const CMD_TEMPLATE_QUOTED = `"${VAR_PHP} ${VAR_PHPARGS} ${VAR_PHPUNIT} ${VAR_PHPUNITARGS}"`;
 
 export const EOL = '\r\n';
+
+export const PHPUNIT_TESTCASE_FQN = 'PHPUnit\\Framework\\TestCase';
+export const PEST_PREFIX = 'P\\';

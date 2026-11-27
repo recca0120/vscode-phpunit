@@ -1,5 +1,5 @@
 import { basename, dirname, join, relative } from 'node:path';
-import { PEST_PREFIX } from '../types';
+import { PEST_PREFIX } from '../constants';
 import { capitalize } from '../utils';
 
 function sanitizeForClassName(value: string): string {
