@@ -60,7 +60,7 @@ describe('TestIndex', () => {
         }
     };
 
-    it('should clear state on reset', async () => {
+    it('clear forgets an indexed file', async () => {
         const testIndex = givenTestIndex(`
             <testsuites>
                 <testsuite name="default">
@@ -352,7 +352,7 @@ describe('TestIndex', () => {
         expect(testIndex.addDatasetChild(started)).toBeDefined();
     });
 
-    it('reset', async () => {
+    it('clear empties an index of several testsuites', async () => {
         const testIndex = givenTestIndex(`
             <testsuites>
                 <testsuite name="Unit">
