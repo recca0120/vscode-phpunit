@@ -453,6 +453,37 @@ class Php84SyntaxTest extends TestCase
         );
     });
 
+    it('parses a class with property hooks (#336)', () => {
+        const file = phpUnitProject('tests/PropertyHooksTest.php');
+        const content = `<?php
+namespace Tests;
+use PHPUnit\\Framework\\TestCase;
+
+class PropertyHooksTest extends TestCase
+{
+    public string $name {
+        get => 'test';
+        set => $value;
+    }
+
+    public function test_something()
+    {
+        $this->assertTrue(true);
+    }
+}
+`;
+        const tests = parse(content, file, createParser());
+        const method = tests.find((t) => t.methodName === 'test_something');
+        expect(method).toBeDefined();
+        expect(method).toEqual(
+            expect.objectContaining({
+                type: TestType.method,
+                className: 'PropertyHooksTest',
+                methodName: 'test_something',
+            }),
+        );
+    });
+
     describe('file with several braced namespaces', () => {
         const file = phpUnitProject('tests/MultipleNamespacesTest.php');
         const content = `<?php
