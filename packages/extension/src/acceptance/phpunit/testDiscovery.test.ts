@@ -1,13 +1,13 @@
 import { initTreeSitter, TestType } from '@vscode-phpunit/phpunit';
+import { phpUnitProject } from '@vscode-phpunit/phpunit/testing';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { type ExtensionContext, Uri, workspace } from 'vscode';
 import { createExtensionContext } from '../../../fakes/extensionContext';
 import { openWorkspace } from '../../../fakes/openWorkspace';
-import { phpUnitFixture } from '../../../test-support/fixtures';
 import { childIds, childLabels, countItems, findItem } from '../../../test-support/testItems';
 import { icon } from '../../TestTree/TestHierarchyBuilder';
 import { activateExtension } from '../harness';
-import { phpUnitSettings, stubs } from '../support';
+import { stubs } from '../support';
 
 describe.each(stubs.phpUnit)('PHPUnit $name ($phpUnitVersion)', ({ root, binary, args }) => {
     let context: ExtensionContext;
@@ -16,7 +16,7 @@ describe.each(stubs.phpUnit)('PHPUnit $name ($phpUnitVersion)', ({ root, binary,
 
     beforeEach(async () => {
         context = createExtensionContext();
-        await openWorkspace({ root, settings: phpUnitSettings(binary, args) });
+        await openWorkspace({ root, settings: { php: 'php', phpunit: binary, args: args } });
     });
     afterEach(() => vi.clearAllMocks());
 
@@ -203,7 +203,7 @@ describe.each(stubs.phpUnit)('PHPUnit $name ($phpUnitVersion)', ({ root, binary,
         });
 
         it('resolves the tests of a folder without phpunit.xml', async () => {
-            const testsRoot = phpUnitFixture.testsFolder;
+            const testsRoot = phpUnitProject('tests');
             await openWorkspace({ root: testsRoot, settings: { args: [] } });
 
             const extension = await activateExtension(context);
@@ -218,7 +218,7 @@ describe.each(stubs.phpUnit)('PHPUnit $name ($phpUnitVersion)', ({ root, binary,
         it('resolves the tests of the phpunit.xml.dist given with -c', async () => {
             await workspace
                 .getConfiguration('phpunit', Uri.file(root))
-                .update('args', ['-c', phpUnitFixture.phpUnitXmlDist]);
+                .update('args', ['-c', phpUnitProject('phpunit.xml.dist')]);
 
             const extension = await activateExtension(context);
 
@@ -236,7 +236,7 @@ describe.each(stubs.phpUnit)('PHPUnit $name ($phpUnitVersion)', ({ root, binary,
 
             await workspace
                 .getConfiguration('phpunit', Uri.file(root))
-                .update('args', ['-c', phpUnitFixture.phpUnitXmlDist]);
+                .update('args', ['-c', phpUnitProject('phpunit.xml.dist')]);
             await extension.refresh();
 
             expect(countItems(controller.items)).toEqual(12);

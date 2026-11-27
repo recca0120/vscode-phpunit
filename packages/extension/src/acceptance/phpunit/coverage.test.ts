@@ -4,11 +4,10 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, type Mock, vi }
 import { type ExtensionContext, type TestItem, TestRunProfileKind } from 'vscode';
 import { createExtensionContext } from '../../../fakes/extensionContext';
 import { openWorkspace } from '../../../fakes/openWorkspace';
-import { phpUnitFixture } from '../../../test-support/fixtures';
 import { expectSpawned } from '../../../test-support/process';
 import { findItem } from '../../../test-support/testItems';
 import { activateExtension } from '../harness';
-import { phpUnitSettings, stubs } from '../support';
+import { stubs } from '../support';
 
 describe.each(stubs.phpUnit)('PHPUnit $name ($phpUnitVersion)', ({ root, binary, args }) => {
     let context: ExtensionContext;
@@ -17,7 +16,7 @@ describe.each(stubs.phpUnit)('PHPUnit $name ($phpUnitVersion)', ({ root, binary,
 
     beforeEach(async () => {
         context = createExtensionContext();
-        await openWorkspace({ root, settings: phpUnitSettings(binary, args) });
+        await openWorkspace({ root, settings: { php: 'php', phpunit: binary, args: args } });
     });
     afterEach(() => vi.clearAllMocks());
 
@@ -32,7 +31,7 @@ describe.each(stubs.phpUnit)('PHPUnit $name ($phpUnitVersion)', ({ root, binary,
 
             const extension = await activateExtension(context);
             const { controller } = extension;
-            const include = [phpUnitFixture.items.assertions, phpUnitFixture.items.calculator]
+            const include = ['Assertions (Tests\\Assertions)', 'Calculator (Tests\\Calculator)']
                 .map((id) => findItem(controller.items, id))
                 .filter((item): item is TestItem => item !== undefined);
             const request = await extension.run(include, {

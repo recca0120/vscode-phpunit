@@ -4,7 +4,7 @@ import { type ExtensionContext, Uri, workspace } from 'vscode';
 import { createExtensionContext } from '../../../fakes/extensionContext';
 import { openWorkspace } from '../../../fakes/openWorkspace';
 import { expectSpawned } from '../../../test-support/process';
-import { activateAndRun, phpUnitSettings, stubs } from '../support';
+import { activateAndRun, stubs } from '../support';
 
 describe.each(stubs.pest)('Pest $name ($pestVersion)', ({ root, binary, args }) => {
     let context: ExtensionContext;
@@ -13,7 +13,7 @@ describe.each(stubs.pest)('Pest $name ($pestVersion)', ({ root, binary, args }) 
 
     beforeEach(async () => {
         context = createExtensionContext();
-        await openWorkspace({ root, settings: phpUnitSettings(binary, args) });
+        await openWorkspace({ root, settings: { php: 'php', phpunit: binary, args: args } });
     });
     afterEach(() => vi.clearAllMocks());
 

@@ -5,7 +5,7 @@ import { createExtensionContext } from '../../fakes/extensionContext';
 import { openWorkspace } from '../../fakes/openWorkspace';
 import { changeWorkspaceFolders } from '../../fakes/vscodeEvents';
 import { activateExtension } from './harness';
-import { phpUnitSettings, stubs } from './support';
+import { stubs } from './support';
 
 type FakeFileSystemWatcher = { disposed: boolean };
 
@@ -25,7 +25,7 @@ describe('workspace folder lifecycle', {
 
     beforeEach(async () => {
         const { root, binary, args } = phpUnitStub;
-        await openWorkspace({ root, settings: phpUnitSettings(binary, args) });
+        await openWorkspace({ root, settings: { php: 'php', phpunit: binary, args: args } });
     });
     afterEach(() => vi.clearAllMocks());
 
@@ -86,7 +86,7 @@ describe('workspace folder lifecycle', {
         await openWorkspace({
             root: phpUnitStub.root,
             name: phpUnitFolder.name,
-            settings: phpUnitSettings(phpUnitStub.binary, phpUnitStub.args),
+            settings: { php: 'php', phpunit: phpUnitStub.binary, args: phpUnitStub.args },
         });
         const _ext = await activateExtension(context);
 

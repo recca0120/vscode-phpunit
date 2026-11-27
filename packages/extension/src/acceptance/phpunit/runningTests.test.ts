@@ -3,15 +3,8 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, type Mock, vi }
 import type { ExtensionContext } from 'vscode';
 import { createExtensionContext } from '../../../fakes/extensionContext';
 import { openWorkspace } from '../../../fakes/openWorkspace';
-import { phpUnitFixture } from '../../../test-support/fixtures';
 import { expectSpawned } from '../../../test-support/process';
-import {
-    activateAndRun,
-    byVersion,
-    expectTestResultCalled,
-    phpUnitSettings,
-    stubs,
-} from '../support';
+import { activateAndRun, byVersion, expectTestResultCalled, stubs } from '../support';
 
 describe.each(stubs.phpUnit)(
     'PHPUnit $name ($phpUnitVersion)',
@@ -22,7 +15,7 @@ describe.each(stubs.phpUnit)(
 
         beforeEach(async () => {
             context = createExtensionContext();
-            await openWorkspace({ root, settings: phpUnitSettings(binary, args) });
+            await openWorkspace({ root, settings: { php: 'php', phpunit: binary, args: args } });
         });
         afterEach(() => vi.clearAllMocks());
 
@@ -44,7 +37,7 @@ describe.each(stubs.phpUnit)(
 
             it('runs the tests of a namespace', async () => {
                 const extension = await activateAndRun(context, {
-                    include: phpUnitFixture.items.testsNamespace,
+                    include: 'namespace:Tests',
                 });
 
                 const expected = byVersion(
@@ -61,7 +54,7 @@ describe.each(stubs.phpUnit)(
 
             it('runs the tests of a class', async () => {
                 const extension = await activateAndRun(context, {
-                    include: phpUnitFixture.items.assertions,
+                    include: 'Assertions (Tests\\Assertions)',
                 });
 
                 const expected = byVersion(

@@ -1,4 +1,5 @@
 import type {
+    TeamcityEvent,
     TestDefinition,
     TestFailed,
     TestFinished,
@@ -18,18 +19,13 @@ import {
     tests,
     Uri,
 } from 'vscode';
-import {
-    testFailed,
-    testFinished,
-    testStarted,
-    testSuiteFinished,
-    testSuiteStarted,
-} from '../../test-support/teamcity';
 import { TestResultObserver } from './TestResultObserver';
 
 function createTestFailed(overrides: Partial<TestFailed> = {}): TestFailed {
-    return testFailed({
+    return {
+        event: 'testFailed' as unknown as TeamcityEvent,
         id: 'Tests\\ExampleTest::test_example',
+        flowId: 1,
         name: 'test_example',
         file: '/project/tests/ExampleTest.php',
         locationHint: 'php_qn:///project/tests/ExampleTest.php::Tests\\ExampleTest::test_example',
@@ -37,7 +33,7 @@ function createTestFailed(overrides: Partial<TestFailed> = {}): TestFailed {
         details: [],
         duration: 0.1,
         ...overrides,
-    });
+    };
 }
 
 function buildTestItemById(items: TestItem[]): AliasMap<TestItem> {
@@ -125,15 +121,15 @@ describe('TestResultObserver', () => {
             testRun,
             buildTestItemById([testItem, pendingItem]),
         );
-        obs.testFinished(
-            testFinished({
-                id: 'Tests\\ExampleTest::test_example',
-                name: 'test_example',
-                file: '/project/tests/ExampleTest.php',
-                locationHint: '',
-                duration: 1,
-            }),
-        );
+        obs.testFinished({
+            event: 'testFinished' as unknown as TeamcityEvent,
+            id: 'Tests\\ExampleTest::test_example',
+            flowId: 1,
+            name: 'test_example',
+            file: '/project/tests/ExampleTest.php',
+            locationHint: '',
+            duration: 1,
+        } as TestFinished);
 
         obs.abort();
 
@@ -161,12 +157,12 @@ describe('TestResultObserver', () => {
     });
 
     it('should skip dataset results when no matching item exists', () => {
-        observer.testStarted(
-            testStarted({
-                id: 'Tests\\ExampleTest::test_example with data set #0',
-                name: 'test_example with data set #0',
-            }),
-        );
+        observer.testStarted({
+            event: 'testStarted' as unknown as TeamcityEvent,
+            id: 'Tests\\ExampleTest::test_example with data set #0',
+            name: 'test_example with data set #0',
+            flowId: 1,
+        } as never);
 
         expect(testRun.started).not.toHaveBeenCalled();
     });
@@ -180,12 +176,12 @@ describe('TestResultObserver', () => {
         const testItemById = buildTestItemById([testItem, datasetItem]);
         const datasetObserver = new TestResultObserver(queue, testRun, testItemById);
 
-        datasetObserver.testStarted(
-            testStarted({
-                id: 'Tests\\ExampleTest::test_example with data set #0',
-                name: 'test_example with data set #0',
-            }),
-        );
+        datasetObserver.testStarted({
+            event: 'testStarted' as unknown as TeamcityEvent,
+            id: 'Tests\\ExampleTest::test_example with data set #0',
+            name: 'test_example with data set #0',
+            flowId: 1,
+        } as never);
 
         expect(testRun.started).toHaveBeenCalledWith(datasetItem);
     });
@@ -201,26 +197,26 @@ describe('TestResultObserver', () => {
         );
         testItemById.set(datasetItem.id, datasetItem);
 
-        dynamicObserver.testStarted(
-            testStarted({
-                id: 'Tests\\ExampleTest::test_example with data set #0',
-                name: 'test_example with data set #0',
-            }),
-        );
+        dynamicObserver.testStarted({
+            event: 'testStarted' as unknown as TeamcityEvent,
+            id: 'Tests\\ExampleTest::test_example with data set #0',
+            name: 'test_example with data set #0',
+            flowId: 1,
+        } as never);
 
         expect(testRun.started).toHaveBeenCalledWith(datasetItem);
     });
 
     it('should pass duration to testRun.passed', () => {
-        observer.testFinished(
-            testFinished({
-                id: 'Tests\\ExampleTest::test_example',
-                name: 'test_example',
-                file: '/project/tests/ExampleTest.php',
-                locationHint: '',
-                duration: 42,
-            }),
-        );
+        observer.testFinished({
+            event: 'testFinished' as unknown as TeamcityEvent,
+            id: 'Tests\\ExampleTest::test_example',
+            flowId: 1,
+            name: 'test_example',
+            file: '/project/tests/ExampleTest.php',
+            locationHint: '',
+            duration: 42,
+        } as TestFinished);
 
         expect(testRun.passed).toHaveBeenCalledWith(testItem, 42);
     });
@@ -317,12 +313,12 @@ describe('TestResultObserver', () => {
             buildTestItemById([testItem, parentItem]),
         );
 
-        obs.testSuiteStarted(
-            testSuiteStarted({
-                id: 'tests/Unit/SampleTests.php::`something` \u2192 it should detect OK but does n',
-                name: '`something` \u2192 it should detect OK but does n',
-            }),
-        );
+        obs.testSuiteStarted({
+            event: 'testSuiteStarted' as unknown as TeamcityEvent,
+            id: 'tests/Unit/SampleTests.php::`something` \u2192 it should detect OK but does n',
+            flowId: 1,
+            name: '`something` \u2192 it should detect OK but does n',
+        } as unknown as TestSuiteStarted);
 
         expect(testRun.started).toHaveBeenCalledWith(parentItem);
     });
@@ -339,12 +335,12 @@ describe('TestResultObserver', () => {
             buildTestItemById([testItem, parentItem]),
         );
 
-        obs.testSuiteFinished(
-            testSuiteFinished({
-                id: 'tests/Unit/SampleTests.php::`something` \u2192 it should detect OK but does n',
-                name: '`something` \u2192 it should detect OK but does n',
-            }),
-        );
+        obs.testSuiteFinished({
+            event: 'testSuiteFinished' as unknown as TeamcityEvent,
+            id: 'tests/Unit/SampleTests.php::`something` \u2192 it should detect OK but does n',
+            flowId: 1,
+            name: '`something` \u2192 it should detect OK but does n',
+        } as unknown as TestSuiteFinished);
 
         expect(testRun.passed).toHaveBeenCalledWith(parentItem);
     });
@@ -361,41 +357,41 @@ describe('TestResultObserver', () => {
             buildTestItemById([testItem, parentItem]),
         );
 
-        obs.testStarted(
-            testStarted({
-                id: 'tests/Unit/ArchTest.php::preset  \u2192 php',
-                name: 'preset  \u2192 php',
-            }),
-        );
+        obs.testStarted({
+            event: 'testStarted' as unknown as TeamcityEvent,
+            id: 'tests/Unit/ArchTest.php::preset  \u2192 php',
+            flowId: 1,
+            name: 'preset  \u2192 php',
+        } as never);
 
         expect(testRun.started).not.toHaveBeenCalledWith(parentItem);
     });
 
     it('should mark suite as failed when TestSuiteFinished reports a failed count', () => {
-        observer.testSuiteFinished(
-            testSuiteFinished({
-                id: testItem.id,
-                name: 'test_example',
-                passed: 0,
-                failed: 1,
-                skipped: 0,
-            }),
-        );
+        observer.testSuiteFinished({
+            event: 'testSuiteFinished' as unknown as TeamcityEvent,
+            id: testItem.id,
+            flowId: 1,
+            name: 'test_example',
+            passed: 0,
+            failed: 1,
+            skipped: 0,
+        } as unknown as TestSuiteFinished);
 
         expect(testRun.passed).not.toHaveBeenCalledWith(testItem);
         expect(testRun.failed).toHaveBeenCalledWith(testItem, expect.anything());
     });
 
     it('should mark suite as passed when TestSuiteFinished reports no failures', () => {
-        observer.testSuiteFinished(
-            testSuiteFinished({
-                id: testItem.id,
-                name: 'test_example',
-                passed: 2,
-                failed: 0,
-                skipped: 1,
-            }),
-        );
+        observer.testSuiteFinished({
+            event: 'testSuiteFinished' as unknown as TeamcityEvent,
+            id: testItem.id,
+            flowId: 1,
+            name: 'test_example',
+            passed: 2,
+            failed: 0,
+            skipped: 1,
+        } as unknown as TestSuiteFinished);
 
         expect(testRun.failed).not.toHaveBeenCalledWith(testItem, expect.anything());
         expect(testRun.passed).toHaveBeenCalledWith(testItem);
@@ -502,15 +498,15 @@ describe('TestResultObserver', () => {
         it('does not skip a test that already reported a result before done()', () => {
             const { obs, otherItem } = buildQueueWithOnlySibling();
 
-            obs.testFinished(
-                testFinished({
-                    id: 'Tests\\OnlyTest::it never runs',
-                    name: 'it never runs',
-                    file: '/project/tests/OnlyTest.php',
-                    locationHint: '',
-                    duration: 1,
-                }),
-            );
+            obs.testFinished({
+                event: 'testFinished' as unknown as TeamcityEvent,
+                id: 'Tests\\OnlyTest::it never runs',
+                flowId: 1,
+                name: 'it never runs',
+                file: '/project/tests/OnlyTest.php',
+                locationHint: '',
+                duration: 1,
+            } as TestFinished);
 
             obs.done();
 

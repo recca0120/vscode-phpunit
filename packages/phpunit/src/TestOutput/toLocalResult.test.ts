@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { RemotePathMapper } from '../Path';
+import { givenCommand } from '../../tests/support/testCommand';
 import { toLocalResult } from './toLocalResult';
 import { TeamcityEvent, type TestFailed } from './types';
 
 describe('toLocalResult', () => {
     it('maps only whole path segments back to the local path', () => {
-        const pathMapper = new RemotePathMapper(
-            { cwd: '/Users/me/app' },
-            { '/Users/me/app': '/var/www' },
+        const command = givenCommand(
+            { command: 'docker exec app', paths: { '/Users/me/app': '/var/www' } },
+            '/Users/me/app',
         );
 
         const result = toLocalResult(
@@ -25,7 +25,7 @@ describe('toLocalResult', () => {
                 ],
                 duration: 0,
             } as TestFailed,
-            pathMapper,
+            command.paths,
         );
 
         expect(result).toMatchObject({

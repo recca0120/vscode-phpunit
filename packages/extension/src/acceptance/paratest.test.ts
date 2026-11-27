@@ -4,10 +4,9 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vite
 import { commands, type ExtensionContext, Uri, window } from 'vscode';
 import { createExtensionContext } from '../../fakes/extensionContext';
 import { openWorkspace, setActiveTextEditor } from '../../fakes/openWorkspace';
-import { phpUnitFixture } from '../../test-support/fixtures';
 import { expectSpawned } from '../../test-support/process';
 import { activateExtension } from './harness';
-import { expectTestResultCalled, methodFilter, phpUnitSettings, stubs } from './support';
+import { expectTestResultCalled, methodFilter, stubs } from './support';
 
 let context: ExtensionContext;
 
@@ -19,7 +18,7 @@ beforeEach(() => {
 
 describe.each(stubs.paratest)('Paratest $name', ({ root, binary, args }) => {
     beforeEach(async () => {
-        await openWorkspace({ root, settings: phpUnitSettings(binary, args) });
+        await openWorkspace({ root, settings: { php: 'php', phpunit: binary, args: args } });
         window.showErrorMessage = vi.fn();
     });
 
@@ -27,7 +26,10 @@ describe.each(stubs.paratest)('Paratest $name', ({ root, binary, args }) => {
 
     it('runs the test method under the cursor with --functional', async () => {
         const extension = await activateExtension(context);
-        setActiveTextEditor(phpUnitFixture.assertionsTest, phpUnitFixture.cursorInTestPassed);
+        setActiveTextEditor(phpUnitProject('tests/AssertionsTest.php'), {
+            line: 17,
+            character: 14,
+        });
 
         await commands.executeCommand('phpunit.run-test-at-cursor');
 

@@ -8,7 +8,7 @@ import { expectSpawned } from '../../test-support/process';
 import { findItem } from '../../test-support/testItems';
 import { icon } from '../TestTree/TestHierarchyBuilder';
 import { activateExtension } from './harness';
-import { phpUnitSettings, stubs } from './support';
+import { stubs } from './support';
 
 let context: ExtensionContext;
 
@@ -29,12 +29,12 @@ describe('multi-root workspace (PHPUnit + Pest)', {
             {
                 root: phpUnitStub.root,
                 name: 'phpunit-stub',
-                settings: phpUnitSettings(phpUnitStub.binary, phpUnitStub.args),
+                settings: { php: 'php', phpunit: phpUnitStub.binary, args: phpUnitStub.args },
             },
             {
                 root: pestStub.root,
                 name: 'pest-stub',
-                settings: phpUnitSettings(pestStub.binary, pestStub.args),
+                settings: { php: 'php', phpunit: pestStub.binary, args: pestStub.args },
             },
         );
     });
