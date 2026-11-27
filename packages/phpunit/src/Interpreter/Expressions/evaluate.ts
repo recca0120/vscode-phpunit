@@ -99,7 +99,7 @@ function createContext(bindings: Bindings, classBody?: AstNode[]): Context {
         bindings,
         classBody,
         resolve: (node) => resolve(node, context),
-        fork: (b, cb) => createContext(b, cb),
+        fork: (b, cb = classBody) => createContext(b, cb),
     };
     return context;
 }

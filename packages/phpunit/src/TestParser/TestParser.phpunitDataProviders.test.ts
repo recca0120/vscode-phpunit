@@ -341,6 +341,50 @@ class LoopProviderTest extends TestCase
             );
         });
 
+        it('reads a class constant in a nested provider loop', () => {
+            const file = phpUnitProject('tests/NestedLoopProviderTest.php');
+            const content = `<?php
+namespace Tests;
+
+use PHPUnit\\Framework\\TestCase;
+
+class NestedLoopProviderTest extends TestCase
+{
+    const CASES = ['alpha', 'beta'];
+
+    /**
+     * @dataProvider provider
+     */
+    public function test_loop(int $a): void
+    {
+        $this->assertSame($a, $a);
+    }
+
+    public static function provider(): iterable
+    {
+        foreach ([1, 2] as $i) {
+            foreach (self::CASES as $case) {
+                yield $case . $i => [$i];
+            }
+        }
+    }
+}`;
+
+            expect(givenTest(file, content, 'test_loop')).toEqual(
+                expect.objectContaining({
+                    annotations: {
+                        dataProvider: ['provider'],
+                        dataset: [
+                            'data set "alpha1"',
+                            'data set "beta1"',
+                            'data set "alpha2"',
+                            'data set "beta2"',
+                        ],
+                    },
+                }),
+            );
+        });
+
         it('loop yielding integer keys is renumbered like PHPUnit', () => {
             expect(givenProviderTest('for ($i = 5; $i < 7; $i++) { yield $i => [$i]; }')).toEqual(
                 expect.objectContaining({
