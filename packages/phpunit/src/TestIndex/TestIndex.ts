@@ -109,7 +109,7 @@ export class TestIndex {
             return [file];
         }
 
-        const folderPrefix = uri.toString();
+        const folderPrefix = `${uri.toString().replace(/\/$/, '')}/`;
         const files = [...this.files()].filter((tracked) =>
             tracked.uri.toString().startsWith(folderPrefix),
         );
