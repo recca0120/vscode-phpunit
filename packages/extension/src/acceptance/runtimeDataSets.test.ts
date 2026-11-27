@@ -36,6 +36,7 @@ describe.each(stubs.phpUnit)('PHPUnit $name ($phpUnitVersion)', ({ binary }) => 
             await extension.resolve();
             const { items } = extension.controller;
 
+            expect(findItem(items, method)).toBeDefined();
             expect(childIds(items, method)).toEqual([]);
 
             await extension.run();
@@ -46,7 +47,6 @@ describe.each(stubs.phpUnit)('PHPUnit $name ($phpUnitVersion)', ({ binary }) => 
                 ([item]) => (item as TestItem).id,
             );
             expect(passed).toEqual(expect.arrayContaining(dataSets));
-            expect(findItem(items, method)).toBeDefined();
         });
     });
 });
