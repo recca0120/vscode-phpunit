@@ -286,6 +286,23 @@ describe('TestIndex', () => {
         await shouldBe(testIndex, { default: [] });
     });
 
+    it('removing a folder keeps a sibling file whose name starts with the folder name', async () => {
+        const testIndex = givenTestIndex(`
+            <testsuites>
+                <testsuite name="default">
+                    <directory>tests</directory>
+                </testsuite>
+            </testsuites>`);
+
+        const sibling = URI.file(phpUnitProject('tests/AssertionsTest.php'));
+        await testIndex.update(sibling);
+
+        const { deleted } = await testIndex.remove(URI.file(phpUnitProject('tests/Assertions')));
+
+        expect(deleted).toEqual([]);
+        expect(testIndex.has(sibling)).toBe(true);
+    });
+
     it('change should remove file when it no longer contains tests', async () => {
         const testIndex = givenTestIndex(`
             <testsuites>
