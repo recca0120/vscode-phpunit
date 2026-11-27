@@ -80,7 +80,7 @@ export class InheritanceResolver {
             (test.children ?? []).map((m) => m.methodName).filter(Boolean),
         );
 
-        const transformer = TestIdentifierFactory.create(test.classFQN);
+        const identifier = TestIdentifierFactory.create(test.classFQN);
         const allMethods = this.inheritedMethods(test.classFQN);
         const inheritedMethods = allMethods
             .filter((m) => m.methodName && !ownMethodNames.has(m.methodName))
@@ -94,7 +94,7 @@ export class InheritanceResolver {
                     start: test.start,
                     end: test.end,
                 };
-                return { ...method, id: transformer.uniqueId(method) };
+                return { ...method, id: identifier.uniqueId(method) };
             });
 
         return {

@@ -1,5 +1,6 @@
 import { datasetExpander } from '../Dataset/DatasetExpander';
 import type { PHPUnitXML } from '../PHPUnitXML/PHPUnitXML';
+import type { TestIdentifier } from '../TestIdentifier/TestIdentifier';
 import { TestIdentifierFactory } from '../TestIdentifier/TestIdentifierFactory';
 import { type TestDefinition, TestType } from '../types';
 
@@ -165,7 +166,7 @@ export abstract class TestHierarchyBuilder<T extends TestTreeItem<T>> {
         skipParts = 0,
     ): ItemCollection<T> {
         const classFQN = testDefinition.classFQN ?? '';
-        const transformer = TestIdentifierFactory.create(classFQN);
+        const identifier = TestIdentifierFactory.create(classFQN);
         const parts = (testDefinition.label?.split('\\') ?? []).filter((value) => !!value);
 
         let children = parentChildren;
@@ -175,7 +176,7 @@ export abstract class TestHierarchyBuilder<T extends TestTreeItem<T>> {
             }
             const testItem = this.getOrCreateNamespaceItem(
                 children,
-                transformer,
+                identifier,
                 parts,
                 part,
                 index,
@@ -188,7 +189,7 @@ export abstract class TestHierarchyBuilder<T extends TestTreeItem<T>> {
 
     private getOrCreateNamespaceItem(
         children: ItemCollection<T>,
-        transformer: ReturnType<typeof TestIdentifierFactory.create>,
+        identifier: TestIdentifier,
         parts: string[],
         part: string,
         index: number,
@@ -197,9 +198,9 @@ export abstract class TestHierarchyBuilder<T extends TestTreeItem<T>> {
         const classFQN = parts.slice(0, index + 1).join('\\');
         const namespaceDefinition: TestDefinition = {
             type,
-            id: transformer.uniqueId({ type, classFQN }),
+            id: identifier.uniqueId({ type, classFQN }),
             namespace: classFQN,
-            label: transformer.generateLabel({ type, classFQN: part }),
+            label: identifier.generateLabel({ type, classFQN: part }),
         };
 
         const existing = children.get(namespaceDefinition.id);
