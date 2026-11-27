@@ -1,7 +1,7 @@
+import type { LineParser } from './LineParser';
 import { TeamcityEvent, type TestDuration } from './types';
-import type { IParser } from './ValueParser';
 
-export class TestDurationParser implements IParser<TestDuration> {
+export class TestDurationParser implements LineParser<TestDuration> {
     private readonly pattern =
         /(Time|Duration):\s+(?<time>[\d+:.]+(\s?\w+)?)(,\sMemory:\s(?<memory>[\d.]+\s\w+))?/;
 

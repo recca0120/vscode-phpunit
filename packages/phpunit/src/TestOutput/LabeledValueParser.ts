@@ -1,11 +1,7 @@
+import type { LineParser } from './LineParser';
 import type { TeamcityEvent } from './types';
 
-export interface IParser<T> {
-    is: (text: string) => boolean;
-    parse: (text: string) => T;
-}
-
-export class ValueParser<T> implements IParser<T> {
+export class LabeledValueParser<T> implements LineParser<T> {
     private pattern: RegExp;
 
     constructor(

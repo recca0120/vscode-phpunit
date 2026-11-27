@@ -12,18 +12,18 @@ import {
 import { PestFixer } from './Fixers/PestFixer';
 import { PestV1Fixer } from './Fixers/PestV1Fixer';
 import { PHPUnitFixer } from './Fixers/PHPUnitFixer';
+import { OutputLineParser } from './OutputLineParser';
 import { classifyEvent, SuiteAggregator } from './SuiteAggregator';
-import { TeamcityLineParser } from './TeamcityLineParser';
 import { TestResultCache } from './TestResultCache';
 
 export class TestOutputParser {
     private cache = new TestResultCache();
     private suites = new SuiteAggregator();
 
-    constructor(private testResultParser: TeamcityLineParser = new TeamcityLineParser()) {}
+    constructor(private lineParser: OutputLineParser = new OutputLineParser()) {}
 
     parse(input: string | Buffer): TestResult | undefined {
-        let result = this.testResultParser.parse(stripAnsi(input.toString()));
+        let result = this.lineParser.parse(stripAnsi(input.toString()));
         result = PestV1Fixer.fixFlowId(this.cache, result);
 
         if (!this.isDispatchable(result)) {
