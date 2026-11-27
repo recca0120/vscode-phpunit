@@ -371,4 +371,12 @@ describe('RemotePathMapper', () => {
             ).toEqual('/workspace/apps/api/apps/api/phpunit.xml.dist');
         });
     });
+
+    it(`resolves ${VAR_PWD} to the process working directory when no cwd is given`, () => {
+        const remotePathMapper = new RemotePathMapper();
+
+        expect(remotePathMapper.resolveVariables(`${VAR_PWD}/tests`)).toEqual(
+            `${process.cwd()}/tests`,
+        );
+    });
 });
