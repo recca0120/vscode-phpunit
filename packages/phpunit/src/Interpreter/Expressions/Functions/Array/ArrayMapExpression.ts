@@ -1,6 +1,6 @@
 import type { AstNode, CallNode } from '../../../AstParser/AstNode';
+import { extractLabels } from '../../datasetLabels';
 import type { Context, Expression } from '../../Expression';
-import { extractLabels } from '../../PhpExpression';
 
 class ArrayMapExpression implements Expression<string[]> {
     supports(node: AstNode): boolean {

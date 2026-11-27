@@ -1,4 +1,3 @@
-import { datasetExpander } from '../../Dataset/DatasetExpander';
 import type { AstNode } from '../AstParser/AstNode';
 import type { Bindings, Context, Expression } from './Expression';
 import { arrayCombineExpression } from './Functions/Array/ArrayCombineExpression';
@@ -107,28 +106,4 @@ function createContext(bindings: Bindings, classBody?: AstNode[]): Context {
 
 export function evaluate(node: AstNode, bindings: Bindings = {}, classBody?: AstNode[]): unknown {
     return createContext(bindings, classBody).resolve(node);
-}
-
-export function extractLabels(resolved: unknown): string[] | undefined {
-    if (!(resolved instanceof Map)) {
-        return undefined;
-    }
-    return toLabels(resolved, { index: 0 });
-}
-
-export function resolveLabels(nodes: AstNode | AstNode[], classBody?: AstNode[]): string[] {
-    const counter = { index: 0 };
-    return [nodes].flat().flatMap((node) => {
-        const resolved = evaluate(node, {}, classBody);
-        if (resolved instanceof Map) {
-            return toLabels(resolved, counter);
-        }
-        return Array.isArray(resolved) ? (resolved as string[]) : [];
-    });
-}
-
-function toLabels(resolved: Map<string, unknown>, counter: { index: number }): string[] {
-    return [...resolved.keys()].map((key: string) =>
-        /^\d+$/.test(key) ? datasetExpander.indexed(counter.index++) : datasetExpander.named(key),
-    );
 }

@@ -8,7 +8,7 @@ import type {
     MethodNode,
 } from './AstParser/AstNode';
 import { initTreeSitter } from './AstParser/TreeSitter/TreeSitterParser';
-import { resolveLabels } from './Expressions/PhpExpression';
+import { resolveLabels } from './Expressions/resolveLabels';
 
 type MethodWithClass = { method: MethodNode; classBody: AstNode[] };
 

@@ -5,7 +5,7 @@ import type {
     ClassConstantAccessNode,
     ExpressionStatementNode,
 } from '../AstParser/AstNode';
-import { evaluate } from '../Expressions/PhpExpression';
+import { evaluate } from '../Expressions/evaluate';
 import type { PHP } from '../PHP';
 import type { FileInfo, PestCallDescriptor, Resolver } from '../types';
 import { CallVisitor } from '../Visitors/CallVisitor';
