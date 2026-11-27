@@ -2,6 +2,7 @@ import type { ChildProcess } from 'node:child_process';
 import { spawn } from 'node:child_process';
 import { EventEmitter } from 'node:events';
 import { rm } from 'node:fs/promises';
+import { StringDecoder } from 'node:string_decoder';
 import { CloverParser, type FileCoverageData } from '../TestCoverage';
 import { TestOutputParser, type TestResult } from '../TestOutput';
 import type { ProcessCommand } from './ProcessCommand';
@@ -90,8 +91,15 @@ export class TestRunnerProcess {
         this.emitter.emit('start', this.command);
         const { runtime, args, options } = this.command.build();
         this.child = spawn(runtime, args, { ...options, signal: this.abortController.signal });
-        this.child.stdout?.on('data', (data) => this.processStream(data, 'stdout'));
-        this.child.stderr?.on('data', (data) => this.processStream(data, 'stderr'));
+        const decoders = { stdout: new StringDecoder('utf8'), stderr: new StringDecoder('utf8') };
+        const decode = (data: Buffer | string, decoder: StringDecoder) =>
+            typeof data === 'string' ? data : decoder.write(data);
+        this.child.stdout?.on('data', (data) =>
+            this.processStream(decode(data, decoders.stdout), 'stdout'),
+        );
+        this.child.stderr?.on('data', (data) =>
+            this.processStream(decode(data, decoders.stderr), 'stderr'),
+        );
         this.child.stdout?.on('end', () => this.flushCompleteLines(this.stdoutBuffer));
         this.child.stderr?.on('end', () => this.flushCompleteLines(this.stderrBuffer));
         this.child.on('error', (err: Error) => this.emitter.emit('error', err));
