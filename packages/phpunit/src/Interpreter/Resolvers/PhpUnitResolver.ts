@@ -5,7 +5,7 @@ import type {
     MethodNode,
     TraitUseNode,
 } from '../AstParser/AstNode';
-import { resolveLabels } from '../Expressions/PhpExpression';
+import { resolveLabels } from '../Expressions/resolveLabels';
 import { AnnotationParser } from '../Metadata/AnnotationParser';
 import { AttributeParser } from '../Metadata/AttributeParser';
 import type { Metadata } from '../Metadata/Metadata';
