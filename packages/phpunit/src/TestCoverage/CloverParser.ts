@@ -1,4 +1,4 @@
-import { XmlElement } from '../PHPUnitXML/XmlElement';
+import { XmlElement } from '../Xml/XmlElement';
 
 export interface LineCoverage {
     line: number;
