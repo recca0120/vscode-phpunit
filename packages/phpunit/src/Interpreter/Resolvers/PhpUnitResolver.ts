@@ -79,7 +79,7 @@ export class PhpUnitResolver implements Resolver {
 
         const traitUses = collectTraitAdaptations(traitUseNodes, resolveFQN);
         const methods = methodNodes.map((method) =>
-            this.buildMethodDescriptor(method, methodNodes, node.body),
+            this.buildMethodDescriptor(method, methodNodes, node.body, name),
         );
 
         return {
@@ -101,6 +101,7 @@ export class PhpUnitResolver implements Resolver {
         method: MethodNode,
         allMethodNodes: MethodNode[],
         classBody: AstNode[],
+        className: string,
     ): MethodDescriptor {
         const metadata = this.metadata.forMethod(method);
         const methodAnnotations = toAnnotations(metadata);
@@ -119,6 +120,7 @@ export class PhpUnitResolver implements Resolver {
                         (name) => allMethodNodes.find((m) => m.name === name) ?? [],
                     ),
                     classBody,
+                    className,
                 ),
         };
     }

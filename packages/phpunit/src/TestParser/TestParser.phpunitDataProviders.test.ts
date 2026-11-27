@@ -400,6 +400,72 @@ class NestedLoopProviderTest extends TestCase
             );
         });
 
+        it('does not read its own constant for another class constant', () => {
+            const file = phpUnitProject('tests/OtherClassConstantProviderTest.php');
+            const content = `<?php
+namespace Tests;
+
+use PHPUnit\\Framework\\TestCase;
+
+class OtherClassConstantProviderTest extends TestCase
+{
+    const CASES = ['own'];
+
+    /**
+     * @dataProvider provider
+     */
+    public function test_loop(string $a): void
+    {
+        $this->assertSame($a, $a);
+    }
+
+    public static function provider(): iterable
+    {
+        foreach (Other::CASES as $case) {
+            yield $case => [$case];
+        }
+    }
+}`;
+
+            expect(givenTest(file, content, 'test_loop')).toEqual(
+                expect.objectContaining({ annotations: { dataProvider: ['provider'] } }),
+            );
+        });
+
+        it('reads its own constant through its class name', () => {
+            const file = phpUnitProject('tests/OwnClassConstantProviderTest.php');
+            const content = `<?php
+namespace Tests;
+
+use PHPUnit\\Framework\\TestCase;
+
+class OwnClassConstantProviderTest extends TestCase
+{
+    const CASES = ['own'];
+
+    /**
+     * @dataProvider provider
+     */
+    public function test_loop(string $a): void
+    {
+        $this->assertSame($a, $a);
+    }
+
+    public static function provider(): iterable
+    {
+        foreach (OwnClassConstantProviderTest::CASES as $case) {
+            yield $case => [$case];
+        }
+    }
+}`;
+
+            expect(givenTest(file, content, 'test_loop')).toEqual(
+                expect.objectContaining({
+                    annotations: { dataProvider: ['provider'], dataset: ['data set "own"'] },
+                }),
+            );
+        });
+
         it('loop yielding integer keys is renumbered like PHPUnit', () => {
             expect(givenProviderTest('for ($i = 5; $i < 7; $i++) { yield $i => [$i]; }')).toEqual(
                 expect.objectContaining({

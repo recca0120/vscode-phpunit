@@ -5,6 +5,7 @@ export type Bindings = Record<string, unknown>;
 export interface Context {
     readonly bindings: Bindings;
     readonly classBody?: AstNode[];
+    readonly className?: string;
     resolve(node: AstNode): unknown;
     fork(bindings: Bindings, classBody?: AstNode[]): Context;
 }
