@@ -1,4 +1,5 @@
 import type { ClassDescriptor, FileInfo, PestCallDescriptor, Range } from '../Interpreter/types';
+import type { TestIdentifier } from '../TestIdentifier/TestIdentifier';
 import { TestIdentifierFactory } from '../TestIdentifier/TestIdentifierFactory';
 import { type Annotations, type TestDefinition, TestType } from '../types';
 import { splitFQN } from '../utils';
@@ -9,7 +10,7 @@ import { generatePestClassFQN } from './PestClassFQNGenerator';
 interface BuildContext {
     file: string;
     namespace: string | undefined;
-    transformer: ReturnType<typeof TestIdentifierFactory.create>;
+    identifier: TestIdentifier;
 }
 
 export function extractTests(
@@ -33,7 +34,7 @@ function extractPhpUnitTests(fileInfo: FileInfo, file: string): ParseResult | un
         const ctx: BuildContext = {
             file,
             namespace: splitFQN(cls.fqn).namespace,
-            transformer: TestIdentifierFactory.create(cls.fqn),
+            identifier: TestIdentifierFactory.create(cls.fqn),
         };
 
         classes.push(buildClassInfo(cls, ctx));
@@ -43,7 +44,7 @@ function extractPhpUnitTests(fileInfo: FileInfo, file: string): ParseResult | un
         }
 
         const children = buildClassChildren(cls, ctx);
-        const classDef = buildDef(ctx.transformer, {
+        const classDef = buildDef(ctx.identifier, {
             type: TestType.class,
             classFQN: cls.fqn,
             namespace: ctx.namespace,
@@ -133,17 +134,17 @@ function extractPestTests(fileInfo: FileInfo, file: string, root: string): Parse
 
     const classFQN = generatePestClassFQN(root, file);
     const { namespace, className } = splitFQN(classFQN);
-    const transformer = TestIdentifierFactory.create(classFQN);
+    const identifier = TestIdentifierFactory.create(classFQN);
 
     const programRange = fileInfo.programRange;
-    const pestCtx: PestContext = { classFQN, namespace, className, file, transformer };
+    const pestCtx: PestContext = { classFQN, namespace, className, file, identifier };
     const children = testCalls.map((call) => buildPestTestDef(call, pestCtx, []));
 
     if (children.length === 0) {
         return undefined;
     }
 
-    const suiteDef = buildDef(transformer, {
+    const suiteDef = buildDef(identifier, {
         type: TestType.class,
         classFQN,
         namespace,
@@ -155,7 +156,7 @@ function extractPestTests(fileInfo: FileInfo, file: string, root: string): Parse
         end: programRange.end,
     });
 
-    const nsDef = buildDef(transformer, {
+    const nsDef = buildDef(identifier, {
         type: TestType.namespace,
         classFQN: namespace,
         namespace,
@@ -174,7 +175,7 @@ interface PestContext {
     namespace: string;
     className: string;
     file: string;
-    transformer: ReturnType<typeof TestIdentifierFactory.create>;
+    identifier: TestIdentifier;
 }
 
 function resolvePestMethodName(call: PestCallDescriptor): { methodName: string; label: string } {
@@ -255,7 +256,7 @@ function buildPestTestDef(
         ? call.children.map((child) => buildPestTestDef(child, ctx, [...describeChain, segment]))
         : [];
 
-    return buildDef(ctx.transformer, {
+    return buildDef(ctx.identifier, {
         type,
         classFQN: ctx.classFQN,
         namespace: ctx.namespace,
@@ -271,7 +272,7 @@ function buildPestTestDef(
 }
 
 function buildDef(
-    transformer: ReturnType<typeof TestIdentifierFactory.create>,
+    identifier: TestIdentifier,
     base: Omit<TestDefinition, 'id' | 'label'> & { label?: string },
 ): TestDefinition {
     const def: TestDefinition = {
@@ -279,10 +280,10 @@ function buildDef(
         id: '',
         label: '',
     };
-    def.id = transformer.uniqueId(def);
+    def.id = identifier.uniqueId(def);
     def.label = base.label
-        ? transformer.generateLabel({ ...def, label: base.label })
-        : transformer.generateLabel(def);
+        ? identifier.generateLabel({ ...def, label: base.label })
+        : identifier.generateLabel(def);
     return def;
 }
 
@@ -291,7 +292,7 @@ function buildMethodDef(
     method: { name: string; annotations: Record<string, unknown>; range: Range },
     ctx: BuildContext,
 ): TestDefinition {
-    return buildDef(ctx.transformer, {
+    return buildDef(ctx.identifier, {
         type: TestType.method,
         classFQN: cls.fqn,
         namespace: ctx.namespace,
