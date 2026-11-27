@@ -87,6 +87,7 @@ export async function waitUntil(
 
 export interface RecordedTestRun {
     passed: number;
+    passedIds: string[];
     failed: number;
     skipped: number;
     ended: boolean;
@@ -97,11 +98,18 @@ export function recordTestRuns(ctrl: vscode.TestController) {
     const createTestRun = ctrl.createTestRun;
     ctrl.createTestRun = (...args: Parameters<vscode.TestController['createTestRun']>) => {
         const run = createTestRun.apply(ctrl, args);
-        const recorded: RecordedTestRun = { passed: 0, failed: 0, skipped: 0, ended: false };
+        const recorded: RecordedTestRun = {
+            passed: 0,
+            passedIds: [],
+            failed: 0,
+            skipped: 0,
+            ended: false,
+        };
         runs.push(recorded);
         const { passed, failed, errored, skipped, end } = run;
         run.passed = (...a) => {
             recorded.passed++;
+            recorded.passedIds.push(a[0].id);
             passed.apply(run, a);
         };
         run.failed = (...a) => {
