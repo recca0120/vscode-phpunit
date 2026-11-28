@@ -13,7 +13,7 @@ import {
     onTestFinished,
     vi,
 } from 'vitest';
-import type { ExtensionContext, TestItem } from 'vscode';
+import { type ExtensionContext, type TestItem, Uri } from 'vscode';
 import { createExtensionContext } from '../../../fakes/extensionContext';
 import { fireFileEvent } from '../../../fakes/fileSystemWatchers';
 import { openWorkspace } from '../../../fakes/openWorkspace';
@@ -163,7 +163,7 @@ describe('phpunit.xml and the files it points to', () => {
     beforeAll(async () => initTreeSitter());
 
     beforeEach(async () => {
-        tmp = await realpath(await mkdtemp(join(tmpdir(), 'vscode-phpunit-')));
+        tmp = Uri.file(await realpath(await mkdtemp(join(tmpdir(), 'vscode-phpunit-')))).fsPath;
         context = createExtensionContext();
     });
     afterEach(async () => {
