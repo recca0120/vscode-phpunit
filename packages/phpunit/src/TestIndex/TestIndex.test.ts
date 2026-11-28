@@ -14,16 +14,11 @@ import { TestIndex } from './TestIndex';
 beforeAll(async () => initTreeSitter());
 
 describe('TestIndex', () => {
-    const phpUnitXML = new PHPUnitXML();
-    const astParser = new ChainAstParser([new TreeSitterAstParser(), new PhpParserAstParser()]);
-    const testParser = new TestParser(phpUnitXML, astParser);
-    const testIndex = new TestIndex(phpUnitXML, testParser);
-
     const givenTestIndex = (text: string) => {
-        phpUnitXML.load(generateXML(text), phpUnitProject('phpunit.xml'));
-        testIndex.clear();
+        const phpUnitXML = new PHPUnitXML().load(generateXML(text), phpUnitProject('phpunit.xml'));
+        const astParser = new ChainAstParser([new TreeSitterAstParser(), new PhpParserAstParser()]);
 
-        return testIndex;
+        return new TestIndex(phpUnitXML, new TestParser(phpUnitXML, astParser));
     };
 
     const shouldBe = async (
@@ -77,6 +72,10 @@ describe('TestIndex', () => {
     });
 
     it('keeps the class registry in TestIndex, not in TestParser', () => {
+        const phpUnitXML = new PHPUnitXML();
+        const astParser = new ChainAstParser([new TreeSitterAstParser(), new PhpParserAstParser()]);
+        const testParser = new TestParser(phpUnitXML, astParser);
+
         expect(Object.values(testParser).some((value) => value instanceof ClassRegistry)).toBe(
             false,
         );
