@@ -13,6 +13,9 @@ import { IndexStore } from './IndexStore';
 import { InheritanceResolver } from './InheritanceResolver';
 import { TestSuiteMatcher } from './TestSuiteMatcher';
 
+const containsOnly = (tests: TestDefinition[]): boolean =>
+    tests.some((test) => test.annotations?.only || containsOnly(test.children ?? []));
+
 export class TestIndex {
     private store = new IndexStore();
     private parseQueue: Promise<void> = Promise.resolve();
@@ -88,6 +91,18 @@ export class TestIndex {
 
     find(uri: URI): IndexedFile<TestDefinition> | undefined {
         return this.store.find(uri);
+    }
+
+    notRunByOnly(queued: TestDefinition[]): TestDefinition[] {
+        const files = new Set(queued.flatMap((test) => (test.file ? [test.file] : [])));
+        const runHasOnly = [...files].some((file) =>
+            containsOnly(this.find(URI.file(file))?.tests ?? []),
+        );
+        if (!runHasOnly) {
+            return [];
+        }
+
+        return queued.filter((test) => test.file && !test.annotations?.only);
     }
 
     *files() {
