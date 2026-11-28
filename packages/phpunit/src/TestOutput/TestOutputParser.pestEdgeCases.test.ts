@@ -41,6 +41,19 @@ describe('TestOutputParser on Pest output edge cases', () => {
         });
     });
 
+    it('keeps a relative test directory that contains tests/ deeper in the path', () => {
+        expectParsed(
+            `##teamcity[testStarted name='it works' locationHint='pest_qn://modules/billing/tests/ExampleTest.php::it works' flowId='68573']`,
+            {
+                event: TeamcityEvent.testStarted,
+                id: 'modules/billing/tests/ExampleTest.php::it works',
+                name: 'it works',
+                file: 'modules/billing/tests/ExampleTest.php',
+                flowId: 68573,
+            },
+        );
+    });
+
     it('multi-word class names', () => {
         expectParsed(
             `##teamcity[testStarted name='Login screen can be rendered' locationHint='pest_qn://Authentication Page (Tests\\Feature\\AuthenticationPage)::Login screen can be rendered' flowId='72545']`,
