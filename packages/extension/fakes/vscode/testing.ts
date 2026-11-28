@@ -69,6 +69,12 @@ const createTestItem = vi
     .mockImplementation((id: string, label: string, uri?: URI): TestItem => {
         const testItem = { id, label, uri } as any;
         testItem.children = new FakeTestItemCollection(testItem);
+        const busyChanges: boolean[] = [];
+        Object.defineProperty(testItem, 'busyChanges', { value: busyChanges });
+        Object.defineProperty(testItem, 'busy', {
+            get: () => busyChanges[busyChanges.length - 1] ?? false,
+            set: (busy: boolean) => busyChanges.push(busy),
+        });
 
         return testItem;
     });
