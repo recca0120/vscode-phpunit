@@ -316,6 +316,25 @@ describe('phpunit.xml and the files it points to', () => {
             );
         });
 
+        it('reloads when composer.lock changes', async () => {
+            await writeFiles({
+                'phpunit.xml': testsuite('tests'),
+                'composer.lock': '{}\n',
+                'tests/ATest.php': testCase('ATest'),
+            });
+            await openWorkspace({ root: tmp, settings: { php: 'php' } });
+            const extension = await activateExtension(context);
+            await extension.resolve();
+            const { controller } = extension;
+            invalidatedResults(controller).length = 0;
+
+            await changeFile('composer.lock', '{"packages":[]}\n');
+
+            await vi.waitFor(() =>
+                expect([...invalidatedResults(controller)].sort()).toEqual(['A', 'A::It works']),
+            );
+        });
+
         it('reloads when composer.json is deleted', async () => {
             await writeFiles({
                 'phpunit.xml': testsuite('tests'),

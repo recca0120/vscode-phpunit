@@ -1,5 +1,5 @@
-import { beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
-import { EventEmitter, RelativePattern, Uri, type WorkspaceFolder, workspace } from 'vscode';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { EventEmitter, RelativePattern, type Uri, type WorkspaceFolder, workspace } from 'vscode';
 import type { TestTree } from '../TestTree';
 import type { TestFileDiscovery } from './TestFileDiscovery';
 import { TestFileWatcher } from './TestFileWatcher';
@@ -53,24 +53,6 @@ describe('TestFileWatcher', () => {
         testTree = createMockTestTree();
         emitter = new EventEmitter<Uri>();
         fileWatcher = new TestFileWatcher(discovery, testTree, emitter);
-    });
-
-    const getConfigWatcher = () => mockWorkspace.createdWatchers[1];
-
-    describe('config file watching', () => {
-        it('should reload all tests when composer.lock changes', async () => {
-            vi.useFakeTimers();
-            onTestFinished(() => {
-                vi.useRealTimers();
-            });
-            await fileWatcher.startWatching();
-            const uri = Uri.file('/workspace/composer.lock');
-
-            getConfigWatcher().fireChange(uri);
-            vi.advanceTimersByTime(500);
-
-            expect(discovery.reloadAll).toHaveBeenCalledTimes(1);
-        });
     });
 
     describe('lifecycle', () => {
