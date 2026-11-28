@@ -355,9 +355,9 @@ describe('phpunit.xml and the files it points to', () => {
             });
 
             await changeFile('phpunit.xml', testsuite('b'));
-            await vi.advanceTimersByTimeAsync(200);
+            await vi.advanceTimersByTimeAsync(300);
             await changeFile('composer.lock', '{}');
-            await vi.advanceTimersByTimeAsync(299);
+            await vi.advanceTimersByTimeAsync(499);
             expect(filesOf(items)).toEqual([join(tmp, 'a/ATest.php')]);
 
             await vi.advanceTimersByTimeAsync(1);

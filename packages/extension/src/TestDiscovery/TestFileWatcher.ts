@@ -4,7 +4,7 @@ import { TestTree } from '../TestTree';
 import { TYPES } from '../types';
 import { TestFileDiscovery } from './TestFileDiscovery';
 
-const CONFIGURATION_SETTLE_MS = 300;
+const CONFIGURATION_SETTLE_MS = 500;
 
 @injectable()
 export class TestFileWatcher {
