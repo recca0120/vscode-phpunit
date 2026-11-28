@@ -249,7 +249,7 @@ describe('TestResultObserver', () => {
 
         const message = (testRun.failed as ReturnType<typeof vi.fn>).mock.calls[0][1];
 
-        expect(message.location.uri.fsPath).toBe('/project/tests/TestCase.php');
+        expect(message.location.uri.fsPath).toBe(Uri.file('/project/tests/TestCase.php').fsPath);
         expect(message.location.range.start.line).toBe(6);
     });
 
@@ -282,7 +282,9 @@ describe('TestResultObserver', () => {
         const message = failedCall[1];
 
         expect(message.stackTrace).toHaveLength(1);
-        expect(message.stackTrace[0].uri.fsPath).toBe('/project/src/Calculator.php');
+        expect(message.stackTrace[0].uri.fsPath).toBe(
+            Uri.file('/project/src/Calculator.php').fsPath,
+        );
         expect(message.stackTrace[0].position.line).toBe(6);
     });
 

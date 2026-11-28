@@ -5,6 +5,8 @@ import { uncapitalize } from '../utils';
 import { isPest } from './isPest';
 import { PHPUnitTestIdentifier } from './PHPUnitTestIdentifier';
 
+const isClassName = (name: string) => name.includes('\\') && !/^[A-Za-z]:\\/.test(name);
+
 export class PestTestIdentifier extends PHPUnitTestIdentifier {
     uniqueId(
         testDefinition: Pick<TestDefinition, 'type' | 'classFQN' | 'methodName' | 'annotations'>,
@@ -46,7 +48,7 @@ export class PestTestIdentifier extends PHPUnitTestIdentifier {
             const id = this.normalizeMethodName(PestV2Fixer.decodeEvaluableId(location, name));
             const file = location.split('::')[0];
 
-            if (id === file && !name.includes('\\')) {
+            if (id === file && !isClassName(name)) {
                 return { id: name, file: '' };
             }
 

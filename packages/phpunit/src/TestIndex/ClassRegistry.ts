@@ -1,6 +1,8 @@
 import { sep } from 'node:path';
 import type { ClassInfo } from '../TestParser/ClassInfo';
 
+const withLowerDrive = (path: string) => path.replace(/^[A-Z]:/, (drive) => drive.toLowerCase());
+
 export class ClassRegistry {
     private registry = new Map<string, ClassInfo>();
 
@@ -13,9 +15,11 @@ export class ClassRegistry {
     }
 
     unregisterPath(uri: string): ClassInfo[] {
-        const removed = this.filterValues(
-            (info) => info.uri === uri || info.uri.startsWith(`${uri}${sep}`),
-        );
+        const path = withLowerDrive(uri);
+        const removed = this.filterValues((info) => {
+            const declared = withLowerDrive(info.uri);
+            return declared === path || declared.startsWith(`${path}${sep}`);
+        });
         for (const info of removed) {
             this.registry.delete(info.classFQN);
         }
@@ -27,7 +31,8 @@ export class ClassRegistry {
     }
 
     declaredIn(uri: string): ClassInfo[] {
-        return this.filterValues((info) => info.uri === uri);
+        const path = withLowerDrive(uri);
+        return this.filterValues((info) => withLowerDrive(info.uri) === path);
     }
 
     childrenOf(classFQN: string): ClassInfo[] {

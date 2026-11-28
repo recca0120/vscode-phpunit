@@ -1,4 +1,4 @@
-import { join } from 'node:path';
+import { join, normalize } from 'node:path';
 import { VAR_WORKSPACE_FOLDER } from '../constants';
 import { checkFileExists, findAsyncSequential } from '../utils';
 import { parseArgumentGroups, quoteInlineOptionValue } from './arguments';
@@ -55,7 +55,7 @@ export abstract class BaseConfiguration implements IConfiguration {
             const configurationFile = configuration
                 .replace('--configuration=', '')
                 .replace(VAR_WORKSPACE_FOLDER, root);
-            files = [configurationFile, join(root, configurationFile), ...files];
+            files = [normalize(configurationFile), join(root, configurationFile), ...files];
         }
 
         return await findAsyncSequential<string>(
