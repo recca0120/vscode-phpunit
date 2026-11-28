@@ -63,7 +63,7 @@ describe('WorkspaceFolderManager', () => {
 
     describe('initialize', () => {
         it('initializes single folder without folder root items', async () => {
-            setWorkspaceFolders(makeFolder('a', '/a'));
+            setWorkspaceFolders(makeFolder('a', '/nonexistent/a'));
 
             await manager.initialize();
 
@@ -72,7 +72,10 @@ describe('WorkspaceFolderManager', () => {
         });
 
         it('initializes multi folders with folder root items', async () => {
-            setWorkspaceFolders(makeFolder('a', '/a'), makeFolder('b', '/b'));
+            setWorkspaceFolders(
+                makeFolder('a', '/nonexistent/a'),
+                makeFolder('b', '/nonexistent/b'),
+            );
 
             await manager.initialize();
 
@@ -95,9 +98,9 @@ describe('WorkspaceFolderManager', () => {
     });
 
     describe('folders added after activation', () => {
-        const a = makeFolder('a', '/a');
-        const b = makeFolder('b', '/b');
-        const c = makeFolder('c', '/c');
+        const a = makeFolder('a', '/nonexistent/a');
+        const b = makeFolder('b', '/nonexistent/b');
+        const c = makeFolder('c', '/nonexistent/c');
 
         const addFolder = async (added: typeof a) => {
             await changeWorkspaceFolders({ added: [added] });
@@ -145,7 +148,10 @@ describe('WorkspaceFolderManager', () => {
 
     describe('dispose', () => {
         it('clears all folders', async () => {
-            setWorkspaceFolders(makeFolder('a', '/a'), makeFolder('b', '/b'));
+            setWorkspaceFolders(
+                makeFolder('a', '/nonexistent/a'),
+                makeFolder('b', '/nonexistent/b'),
+            );
 
             await manager.initialize();
 
