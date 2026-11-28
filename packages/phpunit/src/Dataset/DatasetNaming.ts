@@ -1,7 +1,7 @@
 import { type TestDefinition, TestType } from '../types';
 
 const DATASET_PATTERN =
-    /^(?<base>.*?)(?<dataset>\swith\s(?<label>data\sset\s[#"(].+|dataset\s".+|\(.+))$/;
+    /^(?<base>.*?)(?<dataset>\swith\s(?<label>data\sset\s[#"(].+|dataset\s".+|\(.+))$/s;
 
 class DatasetNaming {
     named(key: string): string {
