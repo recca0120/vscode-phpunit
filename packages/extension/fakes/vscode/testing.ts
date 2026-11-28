@@ -116,18 +116,12 @@ const createTestController = vi
             createTestItem,
             createTestRun,
             invalidated: [] as string[],
-            invalidateTestResults(items?: TestItem | readonly TestItem[]) {
+            invalidateTestResults(items: readonly TestItem[]) {
                 const withChildren = (item: TestItem): string[] => [
                     item.id,
                     ...[...item.children].flatMap(([, child]) => withChildren(child)),
                 ];
-                const roots =
-                    items === undefined
-                        ? [...testController.items].map(([, item]: [string, TestItem]) => item)
-                        : 'id' in items
-                          ? [items]
-                          : items;
-                testController.invalidated.push(...roots.flatMap(withChildren));
+                testController.invalidated.push(...items.flatMap(withChildren));
             },
         } as any;
         testController.items = new FakeTestItemCollection();
