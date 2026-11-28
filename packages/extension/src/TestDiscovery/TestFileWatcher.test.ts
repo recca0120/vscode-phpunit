@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import { EventEmitter, RelativePattern, Uri, type WorkspaceFolder, workspace } from 'vscode';
 import type { TestTree } from '../TestTree';
 import type { TestFileDiscovery } from './TestFileDiscovery';
@@ -59,10 +59,15 @@ describe('TestFileWatcher', () => {
 
     describe('config file watching', () => {
         it('should reload all tests when composer.lock changes', async () => {
+            vi.useFakeTimers();
+            onTestFinished(() => {
+                vi.useRealTimers();
+            });
             await fileWatcher.startWatching();
             const uri = Uri.file('/workspace/composer.lock');
 
             getConfigWatcher().fireChange(uri);
+            vi.advanceTimersByTime(300);
 
             expect(discovery.reloadAll).toHaveBeenCalledTimes(1);
         });
