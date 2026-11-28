@@ -4,6 +4,7 @@ import {
     PHPUnitXML,
     type TestGlobPattern,
     VAR_WORKSPACE_FOLDER,
+    XmlParseError,
 } from '@vscode-phpunit/phpunit';
 import { inject, injectable } from 'inversify';
 import { type GlobPattern, RelativePattern, type WorkspaceFolder, window, workspace } from 'vscode';
@@ -149,19 +150,29 @@ export class TestFileDiscovery {
         const configurationFile = await this.configuration.findConfigurationFile(
             this.workspaceFolder.uri.fsPath,
         );
-        if (configurationFile) {
-            await this.phpUnitXML.loadFile(configurationFile);
-        } else {
-            this.phpUnitXML.unload().setRoot(this.workspaceFolder.uri.fsPath);
-        }
-        this.reportConfigurationError(configurationFile);
+        this.reportConfigurationError(await this.loadConfiguration(configurationFile));
 
         this.loaded = true;
     }
 
-    private reportConfigurationError(configurationFile: string | undefined): void {
-        const error = this.phpUnitXML.error();
-        const message = error ? `${configurationFile}:${error.line} ${error.message}` : undefined;
+    private async loadConfiguration(configurationFile: string | undefined) {
+        if (!configurationFile) {
+            this.phpUnitXML.unload().setRoot(this.workspaceFolder.uri.fsPath);
+            return undefined;
+        }
+
+        try {
+            await this.phpUnitXML.loadFile(configurationFile);
+            return undefined;
+        } catch (error) {
+            if (!(error instanceof XmlParseError)) {
+                throw error;
+            }
+            return `${configurationFile}:${error.line} ${error.message}`;
+        }
+    }
+
+    private reportConfigurationError(message: string | undefined): void {
         if (!this.testTree.markError(message) && message) {
             window.showErrorMessage(`PHPUnit: ${message}`);
         }

@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { dirname, isAbsolute, join, normalize, relative, resolve } from 'node:path';
-import { XmlElement, type XmlError } from '../Xml/XmlElement';
+import { XmlElement } from '../Xml/XmlElement';
 import { TestGlobPattern } from './TestGlobPattern';
 
 export { TestGlobPattern };
@@ -16,17 +16,23 @@ const isInsideDirectory = (directory: string, path: string) => {
 
 export class PHPUnitXML {
     private element?: XmlElement;
-    private _error?: XmlError;
+    private broken = false;
     private _file: string = '';
     private _configRoot: string = '';
     private _root: string = '';
     private readonly cached: Map<string, unknown[]> = new Map();
 
     load(text: string | Buffer | Uint8Array, file: string) {
-        this.element = XmlElement.load(text.toString());
-        this._error = XmlElement.validate(text);
         this._file = file;
         this.setRoot(dirname(file));
+        try {
+            this.element = XmlElement.load(text.toString());
+        } catch (error) {
+            this.element = undefined;
+            this.broken = true;
+            throw error;
+        }
+        this.broken = false;
         this._root = this.resolveProjectRoot();
 
         return this;
@@ -40,7 +46,7 @@ export class PHPUnitXML {
 
     unload() {
         this.element = undefined;
-        this._error = undefined;
+        this.broken = false;
         this._file = '';
 
         return this;
@@ -56,10 +62,6 @@ export class PHPUnitXML {
 
     file() {
         return this._file;
-    }
-
-    error() {
-        return this._error;
     }
 
     root() {
@@ -129,6 +131,9 @@ export class PHPUnitXML {
             },
         );
         const testSuites = rawTestSuites.flat() as TestSuite[];
+        if (this.broken) {
+            return [];
+        }
 
         return testSuites.length > 0
             ? testSuites

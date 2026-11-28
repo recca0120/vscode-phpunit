@@ -3,7 +3,14 @@ import { XMLParser, XMLValidator } from 'fast-xml-parser';
 
 const parser = new XMLParser({ ignoreAttributes: false, trimValues: true });
 
-export type XmlError = { message: string; line: number };
+export class XmlParseError extends Error {
+    constructor(
+        message: string,
+        readonly line: number,
+    ) {
+        super(message);
+    }
+}
 
 export class XmlElement {
     constructor(private readonly node: Record<string, unknown>) {}
@@ -13,13 +20,13 @@ export class XmlElement {
     }
 
     static load(buffer: string | Buffer | Uint8Array) {
-        return new XmlElement(parser.parse(buffer.toString()));
-    }
+        const text = buffer.toString();
+        const result = XMLValidator.validate(text);
+        if (result !== true) {
+            throw new XmlParseError(result.err.msg, result.err.line);
+        }
 
-    static validate(buffer: string | Buffer | Uint8Array): XmlError | undefined {
-        const result = XMLValidator.validate(buffer.toString());
-
-        return result === true ? undefined : { message: result.err.msg, line: result.err.line };
+        return new XmlElement(parser.parse(text));
     }
 
     getAttribute(key: string): string | undefined {
