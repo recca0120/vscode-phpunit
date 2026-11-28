@@ -3,6 +3,7 @@ export * from './Configuration';
 export { EOL, VAR_WORKSPACE_FOLDER } from './constants';
 export {
     ChainAstParser,
+    createDefaultAstParser,
     initTreeSitter,
     PhpParserAstParser,
     TreeSitterAstParser,
