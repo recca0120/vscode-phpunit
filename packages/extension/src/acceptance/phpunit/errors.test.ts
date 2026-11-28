@@ -39,6 +39,11 @@ class KindsTest extends TestCase
         $this->assertTrue(false, 'Config: missing key');
     }
 
+    public function test_fail_call(): void
+    {
+        $this->fail('plain reason');
+    }
+
     public function test_throws(): void
     {
         throw new \\RuntimeException('boom');
@@ -93,6 +98,7 @@ describe.each(stubs.phpUnit)('PHPUnit $name ($phpUnitVersion)', ({ root, binary 
             ]);
             expect(ids(testRun.failed)).toEqual(
                 expect.arrayContaining([
+                    'Kinds (App\\Tests\\Kinds)::Fail call',
                     'Kinds (App\\Tests\\Kinds)::Fails',
                     'Kinds (App\\Tests\\Kinds)::Fails with message',
                 ]),

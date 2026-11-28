@@ -1,5 +1,5 @@
 import {
-    isThrowableFailure,
+    classifyFailure,
     type TestDefinition,
     type TestFailed,
     type TestFinished,
@@ -60,7 +60,8 @@ export class TestResultObserver implements TestRunnerObserver {
     }
 
     testFailed(result: TestFailed): void {
-        const report = isThrowableFailure(result) ? this.testRun.errored : this.testRun.failed;
+        const report =
+            classifyFailure(result) === 'error' ? this.testRun.errored : this.testRun.failed;
         this.doRun(
             result,
             (test) => report.call(this.testRun, test, this.message(result, test), result.duration),
