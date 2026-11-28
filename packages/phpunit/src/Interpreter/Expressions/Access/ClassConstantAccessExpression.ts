@@ -8,12 +8,12 @@ import type { Context, Expression } from '../Expression';
 const refersToOwnClass = (scope: string, className?: string) =>
     scope === 'self' || scope === 'static' || scope.split('\\').pop() === className;
 
-class ClassConstantAccessExpression implements Expression<Map<string, unknown>> {
+class ClassConstantAccessExpression implements Expression<unknown> {
     supports(node: AstNode): boolean {
         return node.kind === 'class_constant_access';
     }
 
-    resolve(node: AstNode, context: Context): Map<string, unknown> | undefined {
+    resolve(node: AstNode, context: Context): unknown {
         if (!context.classBody) {
             return undefined;
         }
@@ -31,8 +31,7 @@ class ClassConstantAccessExpression implements Expression<Map<string, unknown>> 
             return undefined;
         }
 
-        const result = context.resolve(constDecl.value);
-        return result instanceof Map ? result : undefined;
+        return context.resolve(constDecl.value);
     }
 }
 
