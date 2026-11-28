@@ -1,15 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import type { AstNode, StringNode } from '../../AstParser/AstNode';
-import type { Context } from '../Expression';
+import { createContext } from '../evaluate';
 import { stringLiteralExpression } from './StringLiteralExpression';
 
-const noopContext: Context = {
-    bindings: {},
-    resolve() {
-        return undefined;
-    },
-    fork: () => noopContext,
-};
+const context = createContext({});
 
 describe('StringLiteralExpression', () => {
     describe('supports', () => {
@@ -27,12 +21,12 @@ describe('StringLiteralExpression', () => {
     describe('resolve', () => {
         it('should return the string value', () => {
             const node = { kind: 'string', value: 'hello' } as StringNode;
-            expect(stringLiteralExpression.resolve(node, noopContext)).toBe('hello');
+            expect(stringLiteralExpression.resolve(node, context)).toBe('hello');
         });
 
         it('should return empty string', () => {
             const node = { kind: 'string', value: '' } as StringNode;
-            expect(stringLiteralExpression.resolve(node, noopContext)).toBe('');
+            expect(stringLiteralExpression.resolve(node, context)).toBe('');
         });
     });
 });

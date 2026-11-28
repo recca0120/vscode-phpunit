@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { AssignmentNode, AstNode, NumberNode, StringNode } from '../../AstParser/AstNode';
-import type { Bindings, Context } from '../Expression';
+import type { Bindings } from '../Expression';
+import { createContext } from '../evaluate';
 import { assignmentExpression } from './AssignmentExpression';
 
 function numberNode(value: number): AstNode {
@@ -15,17 +16,7 @@ function assignmentNode(variable: string, value: AstNode, operator?: string): As
     return { kind: 'assignment_expression', variable, value, operator } as AssignmentNode;
 }
 
-function makeContext(bindings: Bindings = {}): Context {
-    return {
-        bindings,
-        resolve(node: AstNode) {
-            if (node.kind === 'number') return (node as NumberNode).value;
-            if (node.kind === 'string') return (node as StringNode).value;
-            return undefined;
-        },
-        fork: () => makeContext(bindings),
-    };
-}
+const makeContext = (bindings: Bindings = {}) => createContext(bindings);
 
 describe('AssignmentExpression', () => {
     describe('supports', () => {

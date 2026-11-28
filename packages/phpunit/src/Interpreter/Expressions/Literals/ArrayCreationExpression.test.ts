@@ -6,7 +6,7 @@ import type {
     NumberNode,
     StringNode,
 } from '../../AstParser/AstNode';
-import type { Context } from '../Expression';
+import { createContext } from '../evaluate';
 import { arrayCreationExpression } from './ArrayCreationExpression';
 
 function stringEntry(value: string): ArrayEntryNode {
@@ -21,15 +21,7 @@ function arrayNode(entries: ArrayEntryNode[]): AstNode {
     return { kind: 'array_creation_expression', entries } as ArrayCreationNode;
 }
 
-const noopContext: Context = {
-    bindings: {},
-    resolve(node: AstNode) {
-        if (node.kind === 'string') return (node as StringNode).value;
-        if (node.kind === 'number') return (node as NumberNode).value;
-        return undefined;
-    },
-    fork: () => noopContext,
-};
+const context = createContext({});
 
 describe('ArrayCreationExpression', () => {
     const expression = arrayCreationExpression;
@@ -47,7 +39,7 @@ describe('ArrayCreationExpression', () => {
     describe('resolve', () => {
         it('should resolve string entries', () => {
             const node = arrayNode([stringEntry('a'), stringEntry('b')]);
-            expect(expression.resolve(node, noopContext)).toEqual(
+            expect(expression.resolve(node, context)).toEqual(
                 new Map([
                     ['0', 'a'],
                     ['1', 'b'],
@@ -57,7 +49,7 @@ describe('ArrayCreationExpression', () => {
 
         it('should resolve number entries', () => {
             const node = arrayNode([numberEntry(1), numberEntry(2)]);
-            expect(expression.resolve(node, noopContext)).toEqual(
+            expect(expression.resolve(node, context)).toEqual(
                 new Map([
                     ['0', 1],
                     ['1', 2],
@@ -67,7 +59,7 @@ describe('ArrayCreationExpression', () => {
 
         it('should resolve mixed entries', () => {
             const node = arrayNode([stringEntry('a'), numberEntry(1)]);
-            expect(expression.resolve(node, noopContext)).toEqual(
+            expect(expression.resolve(node, context)).toEqual(
                 new Map<string, unknown>([
                     ['0', 'a'],
                     ['1', 1],
@@ -77,13 +69,13 @@ describe('ArrayCreationExpression', () => {
 
         it('should return undefined for unknown entry kinds', () => {
             const node = arrayNode([{ value: { kind: 'variable' } } as ArrayEntryNode]);
-            expect(expression.resolve(node, noopContext)).toEqual(
+            expect(expression.resolve(node, context)).toEqual(
                 new Map<string, unknown>([['0', undefined]]),
             );
         });
 
         it('should resolve empty array', () => {
-            expect(expression.resolve(arrayNode([]), noopContext)).toEqual(new Map());
+            expect(expression.resolve(arrayNode([]), context)).toEqual(new Map());
         });
 
         it('should resolve keyed entries', () => {
@@ -93,7 +85,7 @@ describe('ArrayCreationExpression', () => {
                     value: { kind: 'number', value: 1 } as NumberNode,
                 } as ArrayEntryNode,
             ]);
-            expect(expression.resolve(node, noopContext)).toEqual(new Map([['foo', 1]]));
+            expect(expression.resolve(node, context)).toEqual(new Map([['foo', 1]]));
         });
     });
 });

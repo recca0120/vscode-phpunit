@@ -1,17 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import type { AstNode, VariableNode } from '../../AstParser/AstNode';
-import type { Bindings, Context } from '../Expression';
+import type { Bindings } from '../Expression';
+import { createContext } from '../evaluate';
 import { variableExpression } from './VariableExpression';
 
-function makeContext(bindings: Bindings = {}): Context {
-    return {
-        bindings,
-        resolve() {
-            return undefined;
-        },
-        fork: () => makeContext(bindings),
-    };
-}
+const makeContext = (bindings: Bindings = {}) => createContext(bindings);
 
 describe('VariableExpression', () => {
     describe('supports', () => {

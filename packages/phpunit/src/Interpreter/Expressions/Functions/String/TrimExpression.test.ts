@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { AstNode, CallNode, StringNode } from '../../../AstParser/AstNode';
-import type { Context } from '../../Expression';
+import { createContext } from '../../evaluate';
 import { trimExpression } from './TrimExpression';
 
 function stringNode(value: string): AstNode {
@@ -11,14 +11,7 @@ function callNode(name: string, args: AstNode[] = []): CallNode {
     return { kind: 'function_call_expression', name, arguments: args } as CallNode;
 }
 
-const resolver: Context = {
-    bindings: {},
-    resolve(node: AstNode) {
-        if (node.kind === 'string') return (node as StringNode).value;
-        return undefined;
-    },
-    fork: () => resolver,
-};
+const context = createContext({});
 
 describe('TrimExpression', () => {
     const expression = trimExpression;
@@ -32,7 +25,7 @@ describe('TrimExpression', () => {
     describe('resolve', () => {
         it('should trim whitespace', () => {
             const node = callNode('trim', [stringNode('  hello  ')]);
-            expect(expression.resolve(node, resolver)).toBe('hello');
+            expect(expression.resolve(node, context)).toBe('hello');
         });
 
         it('should return undefined when argument is undefined', () => {
@@ -41,7 +34,7 @@ describe('TrimExpression', () => {
                 expression.resolve(node, {
                     bindings: {},
                     resolve: () => undefined,
-                    fork: () => resolver,
+                    fork: () => context,
                 }),
             ).toBeUndefined();
         });
