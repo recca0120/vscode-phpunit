@@ -64,15 +64,6 @@ const fakeSpawn = (contents: string[]) => {
     });
 };
 
-const hasFile = (
-    testResult: { details: { file: string; line: number }[] }[],
-    pattern: string,
-    l: number,
-) =>
-    testResult[0].details.some(({ file, line }) => {
-        return !!file.match(new RegExp(pattern)) && line === l;
-    });
-
 const resolveTestId = (rawId: string) => {
     const [classFQN, methodName] = rawId.split('::');
     const type = !methodName ? TestType.class : TestType.method;
@@ -85,23 +76,8 @@ const findResultCall = (id: string, event: TeamcityEvent) =>
         (call: any) => call[0].id === id && call[0].event === event,
     );
 
-const adjustFailedDetails = (
-    // biome-ignore lint/suspicious/noExplicitAny: test result with dynamic detail entries
-    actual: any,
-    details: { file: string; line: number }[],
-    projectPath: (path: string) => string,
-) => {
-    if (hasFile(actual, 'AssertionsTest', 6)) {
-        details = [{ file: projectPath('tests/AssertionsTest.php'), line: 6 }, ...details];
-    }
-    if (hasFile(actual, 'phpunit', 60)) {
-        details = [...details, { file: projectPath('vendor/phpunit/phpunit/phpunit'), line: 60 }];
-    }
-    return details;
-};
-
 // biome-ignore lint/suspicious/noExplicitAny: test helper with dynamic property access
-function expectedTestResult(expected: any, projectPath: (path: string) => string): void {
+function expectedTestResult(expected: any): void {
     const locationHint = `php_qn://${expected.file}::\\${expected.id}`;
     expected.id = resolveTestId(expected.id);
 
@@ -109,7 +85,6 @@ function expectedTestResult(expected: any, projectPath: (path: string) => string
     expect(actual).not.toBeUndefined();
 
     if (expected.event === TeamcityEvent.testFailed && actual) {
-        expected.details = adjustFailedDetails(actual, expected.details, projectPath);
         expect(actual[0].details).toEqual(expected.details);
     }
 
@@ -458,7 +433,7 @@ describe('TestRunner Test', () => {
             ) => {
                 generateTestResult(start, appPath, start.phpVfsComposer);
                 await expectedCommand(command, expected);
-                expectedTestResult(finished, projectPath);
+                expectedTestResult(finished);
             };
 
             it('should run all tests', async () => {
@@ -496,7 +471,10 @@ describe('TestRunner Test', () => {
                     startEvent(TeamcityEvent.testFailed, { name: 'test_failed' }),
                     finishedEvent(TeamcityEvent.testFailed, `${TEST_CLASS}::test_failed`, {
                         message: 'Failed asserting that false is true.',
-                        details: [{ file: localFile, line: 26 }],
+                        details: [
+                            { file: localFile, line: 6 },
+                            { file: localFile, line: 26 },
+                        ],
                     }),
                 );
             });
@@ -512,7 +490,11 @@ describe('TestRunner Test', () => {
                         }),
                         finishedEvent(TeamcityEvent.testFailed, `${TEST_CLASS}::test_failed`, {
                             message: 'Failed asserting that false is true.',
-                            details: [{ file: localFile, line: 26 }],
+                            details: [
+                                { file: localFile, line: 6 },
+                                { file: localFile, line: 26 },
+                                { file: projectPath('vendor/phpunit/phpunit/phpunit'), line: 60 },
+                            ],
                         }),
                     );
                 });
