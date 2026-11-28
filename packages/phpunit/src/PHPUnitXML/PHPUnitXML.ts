@@ -1,5 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { dirname, isAbsolute, join, normalize, relative, resolve } from 'node:path';
+import { isInsideDirectory } from '../utils';
 import { XmlElement } from '../Xml/XmlElement';
 import { TestGlobPattern } from './TestGlobPattern';
 
@@ -8,11 +9,6 @@ export { TestGlobPattern };
 type Source = { tag: string; value: string; prefix?: string; suffix?: string };
 
 export type TestSuite = Source & { name: string };
-
-const isInsideDirectory = (directory: string, path: string) => {
-    const fromDirectory = relative(directory, path);
-    return !fromDirectory.startsWith('..') && !isAbsolute(fromDirectory);
-};
 
 export class PHPUnitXML {
     private element?: XmlElement;
