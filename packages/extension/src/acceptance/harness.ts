@@ -57,6 +57,7 @@ export const activateExtension = async (context: ExtensionContext) => {
 
     return {
         controller,
+        profile,
         outputChannel: (window.createOutputChannel as Mock).mock.results[0].value as OutputChannel,
         run,
         command: (name: string, ...args: unknown[]) => commands.executeCommand(name, ...args),

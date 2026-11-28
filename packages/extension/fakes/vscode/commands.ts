@@ -3,7 +3,9 @@ import { Disposable } from './types';
 
 const commands = (() => {
     const commands = new Map<string, (...rest: any[]) => void>();
+    const executed: [string, unknown[]][] = [];
     return {
+        executed,
         registerCommand: vi
             .fn()
             .mockImplementation((command: string, callback: (...rest: any[]) => void) => {
@@ -11,7 +13,8 @@ const commands = (() => {
                 return new Disposable();
             }),
         executeCommand: async (command: string, ...rest: any[]) => {
-            return commands.get(command)!(...rest);
+            executed.push([command, rest]);
+            return commands.get(command)?.(...rest);
         },
     };
 })();
