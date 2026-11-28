@@ -1,17 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import type { IConfiguration } from '../../Configuration';
+import { Configuration } from '../../Configuration';
 import { Mode, Xdebug } from './Xdebug';
 import { XdebugCoverage } from './XdebugCoverage';
 
-const stubConfig: IConfiguration = {
-    get: () => undefined,
-    has: () => false,
-    update: async () => {},
-    arguments: () => [],
-    findConfigurationFile: async () => undefined,
-};
-
-const givenXdebug = () => new Xdebug(stubConfig);
+const givenXdebug = () => new Xdebug(new Configuration());
 
 const coverageOf = (xdebug: Xdebug) =>
     xdebug.options().find((option) => option instanceof XdebugCoverage);

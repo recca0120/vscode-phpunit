@@ -1,5 +1,5 @@
 import { join } from 'node:path';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { URI } from 'vscode-uri';
 import { phpUnitProject } from '../../test-support/fixtures';
 import { generateXML } from '../../test-support/phpUnitXml';
@@ -8,7 +8,10 @@ import { PHPUnitXML } from './PHPUnitXML';
 describe('PHPUnit XML Test', () => {
     const root = phpUnitProject('');
 
-    const phpUnitXML = new PHPUnitXML();
+    let phpUnitXML: PHPUnitXML;
+    beforeEach(() => {
+        phpUnitXML = new PHPUnitXML();
+    });
     const parse = (text: Buffer | string) => {
         return phpUnitXML.load(text, phpUnitProject('phpunit.xml'));
     };
@@ -378,7 +381,10 @@ describe('PHPUnit XML Test', () => {
 });
 
 describe('testSuiteNames', () => {
-    const phpUnitXML = new PHPUnitXML();
+    let phpUnitXML: PHPUnitXML;
+    beforeEach(() => {
+        phpUnitXML = new PHPUnitXML();
+    });
 
     it('should return unique testsuite names', () => {
         const xml = generateXML(`
@@ -429,7 +435,10 @@ describe('testSuiteNames', () => {
 
 describe('PHPUnit XML in subdirectory (../tests)', () => {
     const parentRoot = phpUnitProject('');
-    const phpUnitXML = new PHPUnitXML();
+    let phpUnitXML: PHPUnitXML;
+    beforeEach(() => {
+        phpUnitXML = new PHPUnitXML();
+    });
 
     it('resolves root to the parent for a ../ directory in a sibling folder sharing its prefix', () => {
         const xml = `<?xml version="1.0" encoding="UTF-8"?>
