@@ -1,4 +1,4 @@
-import { join } from 'node:path';
+import { basename, dirname, join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { phpUnitProject } from '../../test-support/fixtures';
 import { VAR_WORKSPACE_FOLDER } from '../constants';
@@ -68,5 +68,51 @@ describe('Configuration Test', () => {
         const configuration = new Configuration({ args: ['-c', 'src/phpunit.xml'] });
 
         expect(await configuration.findConfigurationFile()).toBeUndefined();
+    });
+});
+
+describe('configurationFilesPattern', () => {
+    const root = phpUnitProject('');
+
+    it('watches the default configuration files and composer files of the folder', () => {
+        const configuration = new Configuration({});
+
+        expect(configuration.configurationFilesPattern(root)).toEqual({
+            base: root,
+            pattern: '{phpunit.xml,phpunit.xml.dist,phpunit.dist.xml,composer.json,composer.lock}',
+        });
+    });
+
+    it('watches the file given with -c instead of the default configuration files', () => {
+        const configuration = new Configuration({ args: ['-c', 'phpunit.custom.xml'] });
+
+        expect(configuration.configurationFilesPattern(root)).toEqual({
+            base: root,
+            pattern: '{phpunit.custom.xml,composer.json,composer.lock}',
+        });
+    });
+
+    it('resolves the workspace folder placeholder in --configuration', () => {
+        const configuration = new Configuration({
+            args: ['--configuration', `${VAR_WORKSPACE_FOLDER}/sub/phpunit.xml`],
+        });
+
+        expect(configuration.configurationFilesPattern(root)).toEqual({
+            base: root,
+            pattern: '{sub/phpunit.xml,composer.json,composer.lock}',
+        });
+    });
+
+    it('watches from the common ancestor when the file given with -c is outside the folder', () => {
+        const parent = dirname(root);
+        const folder = basename(root);
+        const configuration = new Configuration({
+            args: ['-c', join(parent, 'shared', 'phpunit.xml')],
+        });
+
+        expect(configuration.configurationFilesPattern(root)).toEqual({
+            base: parent,
+            pattern: `{shared/phpunit.xml,${folder}/composer.json,${folder}/composer.lock}`,
+        });
     });
 });
