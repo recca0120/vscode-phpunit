@@ -258,6 +258,26 @@ if (phpUnitStubs.length > 0) {
 if (phpUnitStubs.length > 0) {
     const stub = phpUnitStubs.at(-1);
     const phpunit = join(fixturesPath, 'phpunit-stub', stub.binary);
+    const root = watchingWorkspace('change-during-continuous-run', {
+        'phpunit.xml': testsuite('tests'),
+        'tests/ATest.php': testCase('ATest'),
+        '.vscode/settings.json': JSON.stringify({ 'phpunit.phpunit': phpunit }),
+    });
+    configs.push({
+        label: 'watching:change-during-continuous-run',
+        files: 'out/tests/suite-watching/changeDuringContinuousRun.test.js',
+        mocha: mochaOpts,
+        launchArgs: [
+            root,
+            '--disable-extensions',
+            ...userDataDirArgs('change-during-continuous-run'),
+        ],
+    });
+}
+
+if (phpUnitStubs.length > 0) {
+    const stub = phpUnitStubs.at(-1);
+    const phpunit = join(fixturesPath, 'phpunit-stub', stub.binary);
     const root = watchingWorkspace('composer-update', {
         'phpunit.xml': testsuite('tests'),
         'composer.json': '{"name":"vendor/project"}',

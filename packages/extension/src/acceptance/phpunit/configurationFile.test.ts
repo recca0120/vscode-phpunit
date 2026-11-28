@@ -116,6 +116,24 @@ class ${name} extends TestCase
 }
 `;
 
+const testCaseWithSecond = (name: string) => `<?php
+
+use PHPUnit\\Framework\\TestCase;
+
+class ${name} extends TestCase
+{
+    public function test_it_works(): void
+    {
+        $this->assertTrue(true);
+    }
+
+    public function test_second(): void
+    {
+        $this->assertTrue(true);
+    }
+}
+`;
+
 describe('phpunit.xml and the files it points to', () => {
     let tmp: string;
     let context: ExtensionContext;
@@ -402,6 +420,24 @@ describe('phpunit.xml and the files it points to', () => {
 
             await vi.waitFor(() => expect(filesOf(items)).toEqual([join(tmp, 'tests/ATest.php')]));
         });
+
+        it('re-parses a listed test file that is reported as created', async () => {
+            await writeFiles({
+                'phpunit.xml': testsuite('tests'),
+                'tests/ATest.php': testCase('ATest'),
+            });
+            await openWorkspace({ root: tmp, settings: { php: 'php' } });
+            const extension = await activateExtension(context);
+            await extension.resolve();
+            const { items } = extension.controller;
+            expect(allIds(items)).toEqual(['A', 'A::It works']);
+
+            await createFile('tests/ATest.php', testCaseWithSecond('ATest'));
+
+            await vi.waitFor(() =>
+                expect(allIds(items)).toEqual(['A', 'A::It works', 'A::Second']),
+            );
+        });
     });
 
     describe('continuous runs', () => {
@@ -449,6 +485,31 @@ describe('phpunit.xml and the files it points to', () => {
                         ([item]) => (item as TestItem).id,
                     );
                     expect(passed).toEqual(expect.arrayContaining(['A::It works', 'B::It works']));
+                },
+                { timeout: 10_000 },
+            );
+        });
+
+        it('marks a method added to a test file during a continuous run of everything', async () => {
+            await writeFiles({
+                'phpunit.xml': testsuite('tests'),
+                'tests/ATest.php': testCase('ATest'),
+            });
+            await openWorkspace({ root: tmp, settings: { php: 'php', phpunit } });
+            const extension = await activateExtension(context);
+            await extension.resolve();
+            await extension.run(undefined, { continuous: true });
+
+            await changeFile('tests/ATest.php', testCaseWithSecond('ATest'));
+
+            await vi.waitFor(
+                () => {
+                    const [testRun] = extension.testRuns();
+                    expect(testRun.end).toHaveBeenCalled();
+                    const passed = (testRun.passed as Mock).mock.calls.map(
+                        ([item]) => (item as TestItem).id,
+                    );
+                    expect(passed).toEqual(expect.arrayContaining(['A::It works', 'A::Second']));
                 },
                 { timeout: 10_000 },
             );
