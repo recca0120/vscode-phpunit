@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { AstNode, CallNode, StringNode } from '../../../AstParser/AstNode';
-import type { Context } from '../../Expression';
+import { createContext } from '../../evaluate';
 import { strReplaceExpression } from './StrReplaceExpression';
 
 function stringNode(value: string): AstNode {
@@ -11,14 +11,7 @@ function callNode(name: string, args: AstNode[] = []): CallNode {
     return { kind: 'function_call_expression', name, arguments: args } as CallNode;
 }
 
-const resolver: Context = {
-    bindings: {},
-    resolve(node: AstNode) {
-        if (node.kind === 'string') return (node as StringNode).value;
-        return undefined;
-    },
-    fork: () => resolver,
-};
+const context = createContext({});
 
 describe('StrReplaceExpression', () => {
     const expression = strReplaceExpression;
@@ -36,7 +29,7 @@ describe('StrReplaceExpression', () => {
                 stringNode('PHP'),
                 stringNode('hello world'),
             ]);
-            expect(expression.resolve(node, resolver)).toBe('hello PHP');
+            expect(expression.resolve(node, context)).toBe('hello PHP');
         });
 
         it('should return undefined when any argument is undefined', () => {
@@ -45,7 +38,7 @@ describe('StrReplaceExpression', () => {
                 { kind: 'variable', name: 'x' } as AstNode,
                 stringNode('abc'),
             ]);
-            expect(expression.resolve(node, resolver)).toBeUndefined();
+            expect(expression.resolve(node, context)).toBeUndefined();
         });
     });
 });

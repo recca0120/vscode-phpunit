@@ -1,15 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import type { AstNode, NumberNode } from '../../AstParser/AstNode';
-import type { Context } from '../Expression';
+import { createContext } from '../evaluate';
 import { numberLiteralExpression } from './NumberLiteralExpression';
 
-const noopContext: Context = {
-    bindings: {},
-    resolve() {
-        return undefined;
-    },
-    fork: () => noopContext,
-};
+const context = createContext({});
 
 describe('NumberLiteralExpression', () => {
     describe('supports', () => {
@@ -27,17 +21,17 @@ describe('NumberLiteralExpression', () => {
     describe('resolve', () => {
         it('should return number value', () => {
             const node = { kind: 'number', value: 42 } as NumberNode;
-            expect(numberLiteralExpression.resolve(node, noopContext)).toBe(42);
+            expect(numberLiteralExpression.resolve(node, context)).toBe(42);
         });
 
         it('should return zero', () => {
             const node = { kind: 'number', value: 0 } as NumberNode;
-            expect(numberLiteralExpression.resolve(node, noopContext)).toBe(0);
+            expect(numberLiteralExpression.resolve(node, context)).toBe(0);
         });
 
         it('should return negative number', () => {
             const node = { kind: 'number', value: -3 } as NumberNode;
-            expect(numberLiteralExpression.resolve(node, noopContext)).toBe(-3);
+            expect(numberLiteralExpression.resolve(node, context)).toBe(-3);
         });
     });
 });

@@ -2,25 +2,13 @@ import { describe, expect, it } from 'vitest';
 import type {
     AstNode,
     EncapsedStringNode,
-    NumberNode,
     StringNode,
     VariableNode,
 } from '../../AstParser/AstNode';
-import type { Context } from '../Expression';
+import { createContext } from '../evaluate';
 import { encapsedStringExpression } from './EncapsedStringExpression';
 
-function makeContext(bindings: Record<string, string> = {}): Context {
-    return {
-        bindings: {},
-        resolve(node: AstNode) {
-            if (node.kind === 'string') return (node as StringNode).value;
-            if (node.kind === 'number') return String((node as NumberNode).value);
-            if (node.kind === 'variable') return bindings[(node as VariableNode).name];
-            return undefined;
-        },
-        fork: () => makeContext(bindings),
-    };
-}
+const makeContext = (bindings: Record<string, string> = {}) => createContext(bindings);
 
 function encapsedNode(parts: AstNode[]): AstNode {
     return { kind: 'encapsed_string', parts } as EncapsedStringNode;

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { AstNode, CallNode, NumberNode } from '../../../AstParser/AstNode';
-import type { Context } from '../../Expression';
+import { createContext } from '../../evaluate';
 import { rangeExpression } from './RangeExpression';
 
 function numberNode(value: number): AstNode {
@@ -11,14 +11,7 @@ function callNode(name: string, args: AstNode[] = []): CallNode {
     return { kind: 'function_call_expression', name, arguments: args } as CallNode;
 }
 
-const resolver: Context = {
-    bindings: {},
-    resolve(node: AstNode) {
-        if (node.kind === 'number') return (node as NumberNode).value;
-        return undefined;
-    },
-    fork: () => resolver,
-};
+const context = createContext({});
 
 describe('RangeExpression', () => {
     const expression = rangeExpression;
@@ -40,7 +33,7 @@ describe('RangeExpression', () => {
     describe('resolve', () => {
         it('should generate ascending range', () => {
             const node = callNode('range', [numberNode(1), numberNode(3)]);
-            expect(expression.resolve(node, resolver)).toEqual(
+            expect(expression.resolve(node, context)).toEqual(
                 new Map([
                     ['0', 1],
                     ['1', 2],
@@ -51,7 +44,7 @@ describe('RangeExpression', () => {
 
         it('should generate descending range', () => {
             const node = callNode('range', [numberNode(3), numberNode(1)]);
-            expect(expression.resolve(node, resolver)).toEqual(
+            expect(expression.resolve(node, context)).toEqual(
                 new Map([
                     ['0', 3],
                     ['1', 2],
@@ -62,7 +55,7 @@ describe('RangeExpression', () => {
 
         it('should generate range with custom step', () => {
             const node = callNode('range', [numberNode(0), numberNode(6), numberNode(2)]);
-            expect(expression.resolve(node, resolver)).toEqual(
+            expect(expression.resolve(node, context)).toEqual(
                 new Map([
                     ['0', 0],
                     ['1', 2],
@@ -74,12 +67,12 @@ describe('RangeExpression', () => {
 
         it('should return undefined with less than 2 args', () => {
             const node = callNode('range', [numberNode(1)]);
-            expect(expression.resolve(node, resolver)).toBeUndefined();
+            expect(expression.resolve(node, context)).toBeUndefined();
         });
 
         it('should return undefined when step is 0', () => {
             const node = callNode('range', [numberNode(1), numberNode(3), numberNode(0)]);
-            expect(expression.resolve(node, resolver)).toBeUndefined();
+            expect(expression.resolve(node, context)).toBeUndefined();
         });
     });
 });

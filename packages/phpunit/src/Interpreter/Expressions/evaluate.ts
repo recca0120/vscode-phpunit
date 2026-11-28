@@ -94,7 +94,11 @@ function resolve(node: AstNode, context: Context): unknown {
     return undefined;
 }
 
-function createContext(bindings: Bindings, classBody?: AstNode[], className?: string): Context {
+export function createContext(
+    bindings: Bindings,
+    classBody?: AstNode[],
+    className?: string,
+): Context {
     const context: Context = {
         bindings,
         classBody,

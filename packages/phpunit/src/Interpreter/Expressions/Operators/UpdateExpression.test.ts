@@ -1,21 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import type { AstNode, NumberNode, UpdateExpressionNode } from '../../AstParser/AstNode';
-import type { Bindings, Context } from '../Expression';
+import type { Bindings } from '../Expression';
+import { createContext } from '../evaluate';
 import { updateExpression } from './UpdateExpression';
 
 function updateNode(variable: string, operator: string): AstNode {
     return { kind: 'update_expression', variable, operator } as UpdateExpressionNode;
 }
 
-function makeContext(bindings: Bindings = {}): Context {
-    return {
-        bindings,
-        resolve() {
-            return undefined;
-        },
-        fork: () => makeContext(bindings),
-    };
-}
+const makeContext = (bindings: Bindings = {}) => createContext(bindings);
 
 describe('UpdateExpression', () => {
     describe('supports', () => {

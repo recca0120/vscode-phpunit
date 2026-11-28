@@ -6,7 +6,7 @@ import type {
     CallNode,
     StringNode,
 } from '../../../AstParser/AstNode';
-import type { Context } from '../../Expression';
+import { createContext } from '../../evaluate';
 import { implodeExpression } from './ImplodeExpression';
 
 function stringNode(value: string): AstNode {
@@ -25,13 +25,7 @@ function callNode(name: string, args: AstNode[] = []): CallNode {
     return { kind: 'function_call_expression', name, arguments: args } as CallNode;
 }
 
-const resolver: Context = {
-    bindings: {},
-    resolve(node: AstNode) {
-        return node.kind === 'string' ? (node as StringNode).value : undefined;
-    },
-    fork: () => resolver,
-};
+const context = createContext({});
 
 describe('ImplodeExpression', () => {
     const expression = implodeExpression;
@@ -56,7 +50,7 @@ describe('ImplodeExpression', () => {
                 stringNode(', '),
                 arrayNode([stringEntry('a'), stringEntry('b'), stringEntry('c')]),
             ]);
-            expect(expression.resolve(node, resolver)).toBe('a, b, c');
+            expect(expression.resolve(node, context)).toBe('a, b, c');
         });
 
         it('should return undefined when array argument is not array_creation_expression', () => {
@@ -64,7 +58,7 @@ describe('ImplodeExpression', () => {
                 stringNode(', '),
                 { kind: 'variable', name: 'x' } as AstNode,
             ]);
-            expect(expression.resolve(node, resolver)).toBeUndefined();
+            expect(expression.resolve(node, context)).toBeUndefined();
         });
     });
 });

@@ -6,7 +6,7 @@ import type {
     NumberNode,
     StringNode,
 } from '../../AstParser/AstNode';
-import type { Context } from '../Expression';
+import { createContext } from '../evaluate';
 import { conditionalExpression } from './ConditionalExpression';
 
 function numberNode(value: number): AstNode {
@@ -30,24 +30,7 @@ function binaryNode(left: AstNode, operator: string, right: AstNode): AstNode {
     return { kind: 'binary_expression', left, operator, right } as BinaryOpNode;
 }
 
-const resolver: Context = {
-    bindings: {},
-    resolve(node: AstNode) {
-        if (node.kind === 'number') return String((node as NumberNode).value);
-        if (node.kind === 'string') return (node as StringNode).value;
-        if (node.kind === 'binary_expression') {
-            const bin = node as BinaryOpNode;
-            const l = resolver.resolve(bin.left);
-            const r = resolver.resolve(bin.right);
-            if (l === undefined || r === undefined) return undefined;
-            if (bin.operator === '<') return String(Number(l) < Number(r));
-            if (bin.operator === '===') return String(l === r);
-            return undefined;
-        }
-        return undefined;
-    },
-    fork: () => resolver,
-};
+const context = createContext({});
 
 describe('ConditionalExpression', () => {
     describe('supports', () => {
@@ -71,7 +54,7 @@ describe('ConditionalExpression', () => {
                 stringNode('yes'),
                 stringNode('no'),
             );
-            expect(conditionalExpression.resolve(node, resolver)).toBe('yes');
+            expect(conditionalExpression.resolve(node, context)).toBe('yes');
         });
 
         it('should return alternate when condition is false', () => {
@@ -80,7 +63,7 @@ describe('ConditionalExpression', () => {
                 stringNode('yes'),
                 stringNode('no'),
             );
-            expect(conditionalExpression.resolve(node, resolver)).toBe('no');
+            expect(conditionalExpression.resolve(node, context)).toBe('no');
         });
 
         it('should return undefined when condition cannot be resolved', () => {
@@ -89,7 +72,7 @@ describe('ConditionalExpression', () => {
                 stringNode('yes'),
                 stringNode('no'),
             );
-            expect(conditionalExpression.resolve(node, resolver)).toBeUndefined();
+            expect(conditionalExpression.resolve(node, context)).toBeUndefined();
         });
     });
 });

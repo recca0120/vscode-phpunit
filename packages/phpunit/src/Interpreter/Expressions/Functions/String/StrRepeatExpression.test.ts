@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { AstNode, CallNode, NumberNode, StringNode } from '../../../AstParser/AstNode';
-import type { Context } from '../../Expression';
+import { createContext } from '../../evaluate';
 import { strRepeatExpression } from './StrRepeatExpression';
 
 function stringNode(value: string): AstNode {
@@ -15,15 +15,7 @@ function callNode(name: string, args: AstNode[] = []): CallNode {
     return { kind: 'function_call_expression', name, arguments: args } as CallNode;
 }
 
-const resolver: Context = {
-    bindings: {},
-    resolve(node: AstNode) {
-        if (node.kind === 'number') return String((node as NumberNode).value);
-        if (node.kind === 'string') return (node as StringNode).value;
-        return undefined;
-    },
-    fork: () => resolver,
-};
+const context = createContext({});
 
 describe('StrRepeatExpression', () => {
     const expression = strRepeatExpression;
@@ -37,7 +29,7 @@ describe('StrRepeatExpression', () => {
     describe('resolve', () => {
         it('should repeat string', () => {
             const node = callNode('str_repeat', [stringNode('ab'), numberNode(3)]);
-            expect(expression.resolve(node, resolver)).toBe('ababab');
+            expect(expression.resolve(node, context)).toBe('ababab');
         });
 
         it('should return undefined when string is undefined', () => {
@@ -49,14 +41,14 @@ describe('StrRepeatExpression', () => {
                 expression.resolve(node, {
                     bindings: {},
                     resolve: () => undefined,
-                    fork: () => resolver,
+                    fork: () => context,
                 }),
             ).toBeUndefined();
         });
 
         it('should return empty string for count 0', () => {
             const node = callNode('str_repeat', [stringNode('ab'), numberNode(0)]);
-            expect(expression.resolve(node, resolver)).toBe('');
+            expect(expression.resolve(node, context)).toBe('');
         });
     });
 });
