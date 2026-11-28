@@ -1,7 +1,8 @@
 import { type ChildProcess, type SpawnOptions, spawn } from 'node:child_process';
 import { initTreeSitter, TestType } from '@vscode-phpunit/phpunit';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import { commands, type ExtensionContext, Uri } from 'vscode';
+import { commands, type ExtensionContext, TestRunProfileKind, Uri } from 'vscode';
+import { startOneDebugSessionPerFolder, stoppedDebugSessions } from '../../fakes/debugSessions';
 import { createExtensionContext } from '../../fakes/extensionContext';
 import { openWorkspace } from '../../fakes/openWorkspace';
 import { expectSpawned } from '../../test-support/process';
@@ -250,5 +251,16 @@ describe('multi-root workspace (PHPUnit + Pest)', {
         const events = await recordProcessEvents(() => extension.run(include));
 
         expectBothStartedBeforeEitherClosed(events);
+    });
+
+    it('stops the debug session of each folder after debugging every folder at once', async () => {
+        const started = startOneDebugSessionPerFolder();
+        const extension = await activateExtension(context);
+
+        await extension.run(undefined, { kind: TestRunProfileKind.Debug });
+
+        expect(started).toHaveLength(2);
+        expect(stoppedDebugSessions()).toHaveLength(2);
+        expect(stoppedDebugSessions()).toEqual(expect.arrayContaining(started));
     });
 });

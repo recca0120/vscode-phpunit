@@ -1,6 +1,6 @@
 import type { XdebugDebug } from '@vscode-phpunit/phpunit';
 import { inject, injectable } from 'inversify';
-import type { WorkspaceFolder } from 'vscode';
+import type { DebugSession, WorkspaceFolder } from 'vscode';
 import { debug } from 'vscode';
 import { TYPES } from '../types';
 
@@ -9,16 +9,42 @@ export class DebugSessionManager {
     constructor(@inject(TYPES.WorkspaceFolder) private workspaceFolder: WorkspaceFolder) {}
 
     async wrap<T>(xdebug: XdebugDebug | undefined, fn: () => Promise<T>): Promise<T> {
-        if (xdebug?.isEnabled()) {
-            await debug.startDebugging(this.workspaceFolder, xdebug.debugTarget());
-        }
+        const session = xdebug?.isEnabled() ? await this.startDebugging(xdebug) : undefined;
 
         try {
             return await fn();
         } finally {
-            if (xdebug?.isEnabled() && debug.activeDebugSession?.type === 'php') {
-                debug.stopDebugging(debug.activeDebugSession);
+            if (session) {
+                debug.stopDebugging(session);
             }
         }
+    }
+
+    private async startDebugging(xdebug: XdebugDebug): Promise<DebugSession | undefined> {
+        let session: DebugSession | undefined;
+        const listener = debug.onDidStartDebugSession((started) => {
+            if (!session && this.belongsToFolder(started)) {
+                session = started;
+            }
+        });
+
+        try {
+            await debug.startDebugging(this.workspaceFolder, xdebug.debugTarget());
+        } finally {
+            listener.dispose();
+        }
+
+        return session;
+    }
+
+    private belongsToFolder(session: DebugSession) {
+        if (session.type !== 'php') {
+            return false;
+        }
+
+        return (
+            !session.workspaceFolder ||
+            session.workspaceFolder.uri.toString() === this.workspaceFolder.uri.toString()
+        );
     }
 }

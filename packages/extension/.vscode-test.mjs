@@ -344,6 +344,57 @@ if (phpUnitStubs.length > 0) {
     }
 }
 
+const xdebugPhp = process.env.E2E_XDEBUG_PHP ?? 'php';
+const xdebugStub = (() => {
+    try {
+        if (!/xdebug/i.test(execSync(`${xdebugPhp} -m`, { encoding: 'utf8' }))) {
+            return undefined;
+        }
+    } catch {
+        return undefined;
+    }
+    const root = join(fixturesPath, 'phpunit-stub');
+    return [12, 11, 10, 9]
+        .map((v) => `v${v}/vendor/bin/phpunit`)
+        .find((binary) => {
+            try {
+                execSync(`${xdebugPhp} ${binary} --version`, { cwd: root, timeout: 10000 });
+                return true;
+            } catch {
+                return false;
+            }
+        });
+})();
+
+if (xdebugStub) {
+    const root = watchingWorkspace('debug-multi-root', {
+        'a/phpunit.xml': testsuite('tests'),
+        'a/tests/ATest.php': testCase('ATest'),
+        'b/phpunit.xml': testsuite('tests'),
+        'b/tests/BTest.php': testCase('BTest'),
+    });
+    writeFileSync(
+        join(root, 'multi-root.code-workspace'),
+        JSON.stringify({
+            folders: [{ path: 'a' }, { path: 'b' }],
+            settings: {
+                'phpunit.php': xdebugPhp,
+                'phpunit.phpunit': join(fixturesPath, 'phpunit-stub', xdebugStub),
+            },
+        }),
+    );
+    configs.push({
+        label: 'debugging:multi-root',
+        files: 'out/tests/suite-debugging/**/*.test.js',
+        installExtensions: ['xdebug.php-debug'],
+        mocha: { ...mochaOpts, timeout: 60_000 },
+        launchArgs: [
+            join(root, 'multi-root.code-workspace'),
+            ...userDataDirArgs('debug-multi-root'),
+        ],
+    });
+}
+
 const issue381Root = join(fixturesPath, 'issue-381/php-project');
 const issue381Binary = 'vendor/bin/phpunit';
 try {
