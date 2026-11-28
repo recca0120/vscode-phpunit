@@ -67,7 +67,7 @@ describe('TestFileWatcher', () => {
             const uri = Uri.file('/workspace/composer.lock');
 
             getConfigWatcher().fireChange(uri);
-            vi.advanceTimersByTime(300);
+            vi.advanceTimersByTime(500);
 
             expect(discovery.reloadAll).toHaveBeenCalledTimes(1);
         });
