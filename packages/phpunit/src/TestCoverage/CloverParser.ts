@@ -5,11 +5,18 @@ export interface LineCoverage {
     count: number;
 }
 
+export interface MethodCoverage {
+    name: string;
+    line: number;
+    count: number;
+}
+
 export interface FileCoverageData {
     filePath: string;
     covered: number;
     total: number;
     lines: LineCoverage[];
+    methods?: { covered: number; total: number; declarations: MethodCoverage[] };
 }
 
 export class CloverParser {
@@ -43,6 +50,18 @@ export class CloverParser {
                 line: parseInt(line.getAttribute('num') ?? '1', 10),
                 count: parseInt(line.getAttribute('count') ?? '0', 10),
             })),
+            methods: {
+                covered: parseInt(metrics?.getAttribute('coveredmethods') ?? '0', 10),
+                total: parseInt(metrics?.getAttribute('methods') ?? '0', 10),
+                declarations: node
+                    .querySelectorAll('line')
+                    .filter((line) => line.getAttribute('type') === 'method')
+                    .map((line) => ({
+                        name: line.getAttribute('name') ?? '',
+                        line: parseInt(line.getAttribute('num') ?? '1', 10),
+                        count: parseInt(line.getAttribute('count') ?? '0', 10),
+                    })),
+            },
         };
     }
 }
