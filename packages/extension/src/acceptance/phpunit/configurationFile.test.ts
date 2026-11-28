@@ -16,6 +16,7 @@ import {
 import { type ExtensionContext, type TestItem, Uri } from 'vscode';
 import { createExtensionContext } from '../../../fakes/extensionContext';
 import { fireFileEvent } from '../../../fakes/fileSystemWatchers';
+import { invalidatedResults } from '../../../fakes/invalidatedResults';
 import { openWorkspace } from '../../../fakes/openWorkspace';
 import { allIds, filesOf } from '../../../test-support/testItems';
 import { activateExtension } from '../harness';
@@ -419,6 +420,29 @@ describe('phpunit.xml and the files it points to', () => {
             await deleteFile('tests/BTest.php');
 
             await vi.waitFor(() => expect(filesOf(items)).toEqual([join(tmp, 'tests/ATest.php')]));
+        });
+
+        it('marks the results of a changed test file as outdated', async () => {
+            await writeFiles({
+                'phpunit.xml': testsuite('tests'),
+                'tests/ATest.php': testCase('ATest'),
+                'tests/BTest.php': testCase('BTest'),
+            });
+            await openWorkspace({ root: tmp, settings: { php: 'php' } });
+            const extension = await activateExtension(context);
+            await extension.resolve();
+            const { controller } = extension;
+            invalidatedResults(controller).length = 0;
+
+            await changeFile('tests/ATest.php', testCaseWithSecond('ATest'));
+
+            await vi.waitFor(() =>
+                expect([...invalidatedResults(controller)].sort()).toEqual([
+                    'A',
+                    'A::It works',
+                    'A::Second',
+                ]),
+            );
         });
 
         it('re-parses a listed test file that is reported as created', async () => {
