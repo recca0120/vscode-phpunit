@@ -258,6 +258,24 @@ if (phpUnitStubs.length > 0) {
 if (phpUnitStubs.length > 0) {
     const stub = phpUnitStubs.at(-1);
     const phpunit = join(fixturesPath, 'phpunit-stub', stub.binary);
+    const root = watchingWorkspace('composer-update', {
+        'phpunit.xml': testsuite('tests'),
+        'composer.json': '{"name":"vendor/project"}',
+        'composer.lock': '{}',
+        'tests/ATest.php': testCase('ATest'),
+        '.vscode/settings.json': JSON.stringify({ 'phpunit.phpunit': phpunit }),
+    });
+    configs.push({
+        label: 'watching:composer-update',
+        files: 'out/tests/suite-watching/composerUpdate.test.js',
+        mocha: mochaOpts,
+        launchArgs: [root, '--disable-extensions', ...userDataDirArgs('composer-update')],
+    });
+}
+
+if (phpUnitStubs.length > 0) {
+    const stub = phpUnitStubs.at(-1);
+    const phpunit = join(fixturesPath, 'phpunit-stub', stub.binary);
     const root = watchingWorkspace('edit-test-file', {
         'phpunit.xml': testsuite('tests'),
         'tests/ATest.php': testCase('ATest'),

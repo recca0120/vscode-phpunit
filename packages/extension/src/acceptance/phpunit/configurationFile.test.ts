@@ -2,7 +2,17 @@ import { mkdir, mkdtemp, realpath, rm, unlink, writeFile } from 'node:fs/promise
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { initTreeSitter, VAR_WORKSPACE_FOLDER } from '@vscode-phpunit/phpunit';
-import { afterEach, beforeAll, beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
+import {
+    afterEach,
+    beforeAll,
+    beforeEach,
+    describe,
+    expect,
+    it,
+    type Mock,
+    onTestFinished,
+    vi,
+} from 'vitest';
 import type { ExtensionContext, TestItem } from 'vscode';
 import { createExtensionContext } from '../../../fakes/extensionContext';
 import { fireFileEvent } from '../../../fakes/fileSystemWatchers';
@@ -326,6 +336,33 @@ describe('phpunit.xml and the files it points to', () => {
                     join(tmp, 'b/CTest.php'),
                 ]),
             );
+        });
+
+        it('reloads once the configuration files stop changing', async () => {
+            await writeFiles({
+                'phpunit.xml': testsuite('a'),
+                'composer.lock': '{}',
+                'a/ATest.php': testCase('ATest'),
+                'b/BTest.php': testCase('BTest'),
+            });
+            await openWorkspace({ root: tmp, settings: { php: 'php' } });
+            const extension = await activateExtension(context);
+            await extension.resolve();
+            const { items } = extension.controller;
+            vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+            onTestFinished(() => {
+                vi.useRealTimers();
+            });
+
+            await changeFile('phpunit.xml', testsuite('b'));
+            await vi.advanceTimersByTimeAsync(200);
+            await changeFile('composer.lock', '{}');
+            await vi.advanceTimersByTimeAsync(299);
+            expect(filesOf(items)).toEqual([join(tmp, 'a/ATest.php')]);
+
+            await vi.advanceTimersByTimeAsync(1);
+            vi.useRealTimers();
+            await vi.waitFor(() => expect(filesOf(items)).toEqual([join(tmp, 'b/BTest.php')]));
         });
     });
 

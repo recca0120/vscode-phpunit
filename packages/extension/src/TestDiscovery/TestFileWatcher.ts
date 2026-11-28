@@ -4,10 +4,13 @@ import { TestTree } from '../TestTree';
 import { TYPES } from '../types';
 import { TestFileDiscovery } from './TestFileDiscovery';
 
+const CONFIGURATION_SETTLE_MS = 300;
+
 @injectable()
 export class TestFileWatcher {
     private testWatcher?: Disposable;
     private configWatcher?: Disposable;
+    private reloadTimer?: ReturnType<typeof setTimeout>;
 
     constructor(
         @inject(TestFileDiscovery) private testFileDiscovery: TestFileDiscovery,
@@ -22,9 +25,13 @@ export class TestFileWatcher {
         const configWatcher = workspace.createFileSystemWatcher(
             this.testFileDiscovery.getConfigFilePattern(),
         );
-        const reload = async () => {
-            await this.testFileDiscovery.reloadAll();
-            await this.createTestWatcher();
+        const reload = () => {
+            clearTimeout(this.reloadTimer);
+            this.reloadTimer = setTimeout(async () => {
+                this.reloadTimer = undefined;
+                await this.testFileDiscovery.reloadAll();
+                await this.createTestWatcher();
+            }, CONFIGURATION_SETTLE_MS);
         };
         configWatcher.onDidCreate(reload);
         configWatcher.onDidChange(reload);
@@ -35,6 +42,8 @@ export class TestFileWatcher {
     }
 
     dispose(): void {
+        clearTimeout(this.reloadTimer);
+        this.reloadTimer = undefined;
         this.testWatcher?.dispose();
         this.testWatcher = undefined;
         this.configWatcher?.dispose();
