@@ -572,7 +572,7 @@ describe('unload', () => {
     });
 });
 
-describe('error', () => {
+describe('a malformed file', () => {
     const malformed = `<?xml version="1.0" encoding="UTF-8"?>
 <phpunit>
     <testsuites>
@@ -582,27 +582,33 @@ describe('error', () => {
 </phpunit>
 `;
 
-    it('reports why a malformed file is not well-formed and on which line', () => {
-        const phpUnitXML = new PHPUnitXML().load(malformed, phpUnitProject('phpunit.xml'));
-
-        expect(phpUnitXML.error()).toEqual({
-            message:
-                "Expected closing tag 'testsuites' (opened in line 3, col 5) instead of closing tag 'phpunit'.",
-            line: 7,
-        });
+    it('throws why it is not well-formed and on which line', () => {
+        expect(() => new PHPUnitXML().load(malformed, phpUnitProject('phpunit.xml'))).toThrow(
+            expect.objectContaining({
+                message:
+                    "Expected closing tag 'testsuites' (opened in line 3, col 5) instead of closing tag 'phpunit'.",
+                line: 7,
+            }),
+        );
     });
 
-    it('reports nothing for a well-formed file', () => {
-        const phpUnitXML = new PHPUnitXML().load(generateXML(''), phpUnitProject('phpunit.xml'));
+    it('lists no testsuites after failing to load', () => {
+        const phpUnitXML = new PHPUnitXML();
 
-        expect(phpUnitXML.error()).toBeUndefined();
+        expect(() => phpUnitXML.load(malformed, phpUnitProject('phpunit.xml'))).toThrow();
+
+        expect(phpUnitXML.testSuites()).toEqual([]);
     });
 
-    it('forgets the error on unload', () => {
-        const phpUnitXML = new PHPUnitXML().load(malformed, phpUnitProject('phpunit.xml'));
+    it('lists the default testsuites again after unload', () => {
+        const phpUnitXML = new PHPUnitXML();
+        expect(() => phpUnitXML.load(malformed, phpUnitProject('phpunit.xml'))).toThrow();
 
-        phpUnitXML.unload();
+        phpUnitXML.unload().setRoot(phpUnitProject(''));
 
-        expect(phpUnitXML.error()).toBeUndefined();
+        expect(phpUnitXML.testSuites()).toEqual([
+            { tag: 'directory', name: 'default', value: '', suffix: '.php' },
+            { tag: 'exclude', name: 'default', value: 'vendor' },
+        ]);
     });
 });

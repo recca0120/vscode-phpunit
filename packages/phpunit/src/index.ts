@@ -20,3 +20,4 @@ export * from './TestRunner';
 export * from './TestTree';
 export { type TestDefinition, TestType } from './types';
 export { semverGte, semverLt } from './utils';
+export { XmlParseError } from './Xml/XmlElement';

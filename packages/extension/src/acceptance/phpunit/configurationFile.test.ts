@@ -573,14 +573,13 @@ describe('phpunit.xml and the files it points to', () => {
             return { extension, folderOf };
         };
 
-        it('shows the XML error on its folder and still lists the tests', async () => {
+        it('shows the XML error on its folder and lists none of its tests', async () => {
             const { extension, folderOf } = await openTwoFolders();
 
             expect(folderOf('a')?.error).toBe(`${join(tmp, 'a/phpunit.xml')}:7 ${reason}`);
             expect(folderOf('b')?.error).toBeUndefined();
-            expect(allIds(extension.controller.items)).toEqual(
-                expect.arrayContaining(['A::It works', 'B::It works']),
-            );
+            expect(allIds(extension.controller.items)).toContain('B::It works');
+            expect(allIds(extension.controller.items)).not.toContain('A::It works');
         });
 
         it('clears the error once phpunit.xml is fixed', async () => {
