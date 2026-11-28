@@ -142,5 +142,5 @@ jobs:
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: coverage/coverage-final.json
+          files: packages/phpunit/coverage/coverage-final.json,packages/extension/coverage/coverage-final.json
           flags: unittests

@@ -17,7 +17,7 @@
         "package": "pnpm --filter vscode-phpunit run package",
         "test": "pnpm -r run test",
         "test:e2e": "pnpm --filter vscode-phpunit run test:e2e",
-        "vitest": "pnpm -r run vitest",
+        "vitest": "pnpm -r run test",
         "lint": "pnpm -r run lint",
         "lint:fix": "pnpm -r run lint:fix",
         "format": "pnpm -r run format",
