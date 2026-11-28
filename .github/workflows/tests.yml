@@ -108,6 +108,10 @@ jobs:
             fi
           done
 
+      - name: Install Composer dependencies (Pest v1 stub)
+        if: matrix.php != '8.4'
+        run: cd packages/phpunit/tests/fixtures/pest-v1-stub && composer install --prefer-dist --no-interaction --no-progress
+
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile
 

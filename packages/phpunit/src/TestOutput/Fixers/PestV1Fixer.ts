@@ -12,6 +12,15 @@ function toDataSetLabel(locationHint: string) {
 
 const isAbsolutePath = (path: string) => /^([A-Za-z]:)?\//.test(path);
 
+const relativeToRoot = (path: string, root?: string) => {
+    if (!root) {
+        return undefined;
+    }
+    const base = `${root.replace(/\\/g, '/').replace(/\/$/, '')}/`;
+
+    return path.toLowerCase().startsWith(base.toLowerCase()) ? path.slice(base.length) : undefined;
+};
+
 type TestResultExt = TestResult & { flowId?: number; name?: string; id?: string };
 
 function matchFlowIdCandidate(tr: TestResultExt, candidate: TestResult): boolean {
@@ -25,11 +34,14 @@ function matchFlowIdCandidate(tr: TestResultExt, candidate: TestResult): boolean
 }
 
 export const PestV1Fixer = {
-    normalizeLocationHint(locationHint: string) {
+    normalizeLocationHint(locationHint: string, root?: string) {
+        if (!isAbsolutePath(locationHint)) {
+            return toDataSetLabel(locationHint);
+        }
+
         return toDataSetLabel(
-            isAbsolutePath(locationHint)
-                ? locationHint.substring(locationHint.lastIndexOf('tests/'))
-                : locationHint,
+            relativeToRoot(locationHint, root) ??
+                locationHint.substring(locationHint.lastIndexOf('tests/')),
         );
     },
 

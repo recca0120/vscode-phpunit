@@ -5,6 +5,7 @@ import { rm } from 'node:fs/promises';
 import { StringDecoder } from 'node:string_decoder';
 import { CloverParser, type FileCoverageData } from '../TestCoverage';
 import { TestOutputParser, type TestResult } from '../TestOutput';
+import { OutputLineParser } from '../TestOutput/OutputLineParser';
 import type { ProcessCommand } from './ProcessCommand';
 import { TestRunnerEvent } from './TestRunnerEvent';
 import type { TestRunnerEmitter } from './TestRunnerObserver';
@@ -25,7 +26,9 @@ export class TestRunnerProcess {
     constructor(
         private command: ProcessCommand,
         events?: TestRunnerEmitter,
-        private testOutputParser = new TestOutputParser(),
+        private testOutputParser = new TestOutputParser(
+            new OutputLineParser(command.build().options.cwd?.toString()),
+        ),
     ) {
         this.abortController = new AbortController();
         if (events) {
