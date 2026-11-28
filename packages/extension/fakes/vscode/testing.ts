@@ -115,6 +115,14 @@ const createTestController = vi
             createRunProfile,
             createTestItem,
             createTestRun,
+            invalidated: [] as string[],
+            invalidateTestResults(items: readonly TestItem[]) {
+                const withChildren = (item: TestItem): string[] => [
+                    item.id,
+                    ...[...item.children].flatMap(([, child]) => withChildren(child)),
+                ];
+                testController.invalidated.push(...items.flatMap(withChildren));
+            },
         } as any;
         testController.items = new FakeTestItemCollection();
 

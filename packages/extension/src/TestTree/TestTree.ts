@@ -168,6 +168,7 @@ export class TestTree {
     private applyIndexChange(result: IndexChange) {
         for (const { uri, tests } of result.parsed) {
             this.handleTestsParsed(uri, tests);
+            this.ctrl.invalidateTestResults(this.itemsInFile(uri));
         }
         for (const file of result.deleted) {
             this.handleFileDeleted(file);
