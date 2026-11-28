@@ -501,6 +501,39 @@ class SelfReferenceTest extends TestCase
             );
         });
 
+        it('reads its own scalar constant in a data set key', () => {
+            const file = phpUnitProject('tests/KeysTest.php');
+            const content = `<?php
+
+use PHPUnit\\Framework\\Attributes\\DataProvider;
+use PHPUnit\\Framework\\TestCase;
+
+class KeysTest extends TestCase
+{
+    const PREFIX = 'pre ';
+
+    public static function constantProvider(): array
+    {
+        return [self::PREFIX . 'a' => [1], self::PREFIX . 'b' => [2]];
+    }
+
+    #[DataProvider('constantProvider')]
+    public function test_constant(int $value): void
+    {
+        $this->assertTrue($value > 0);
+    }
+}`;
+
+            expect(givenTest(file, content, 'test_constant')).toEqual(
+                expect.objectContaining({
+                    annotations: {
+                        dataProvider: ['constantProvider'],
+                        dataset: ['data set "pre a"', 'data set "pre b"'],
+                    },
+                }),
+            );
+        });
+
         it('decodes escape sequences in a double-quoted data set key', () => {
             expect(givenProviderTest('return ["first\\nsecond" => [1]];')).toEqual(
                 expect.objectContaining({
