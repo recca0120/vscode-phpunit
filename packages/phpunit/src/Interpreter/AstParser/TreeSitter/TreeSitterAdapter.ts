@@ -758,6 +758,12 @@ function adaptEncapsedString(node: SyntaxNode): AstNode {
                 value: child.text,
                 loc: locOf(child),
             });
+        } else if (child.type === 'escape_sequence') {
+            parts.push({
+                kind: 'string',
+                value: decodeDoubleQuoted(child.text),
+                loc: locOf(child),
+            });
         } else if (child.type === 'variable_name') {
             parts.push({
                 kind: 'variable',

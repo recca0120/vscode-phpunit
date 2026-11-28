@@ -512,6 +512,21 @@ class SelfReferenceTest extends TestCase
             );
         });
 
+        it('decodes escape sequences in a data set key that interpolates a variable', () => {
+            expect(
+                givenProviderTest(
+                    'foreach ([\'x\'] as $name) { yield "tab\\t$name" => [1]; yield "quote\\"$name" => [1]; yield "dollar\\$$name" => [1]; }',
+                ),
+            ).toEqual(
+                expect.objectContaining({
+                    annotations: {
+                        dataProvider: ['provider'],
+                        dataset: ['data set "tab\tx"', 'data set "quote"x"', 'data set "dollar$x"'],
+                    },
+                }),
+            );
+        });
+
         it('loop yielding integer keys is renumbered like PHPUnit', () => {
             expect(givenProviderTest('for ($i = 5; $i < 7; $i++) { yield $i => [$i]; }')).toEqual(
                 expect.objectContaining({
