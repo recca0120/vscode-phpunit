@@ -1,4 +1,4 @@
-import { debug } from './debug';
+import { debug, startActiveSession } from './debug';
 import { window } from './window';
 import { configurations, workspace } from './workspace';
 
@@ -27,4 +27,5 @@ export const resetFakeVscode = () => {
     define(window, 'activeTextEditor', undefined);
 
     define(debug, 'activeDebugSession', { type: 'php' });
+    debug.startDebugging.mockImplementation(startActiveSession);
 };
