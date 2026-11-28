@@ -466,6 +466,41 @@ class OwnClassConstantProviderTest extends TestCase
             );
         });
 
+        it('labels the data set when its own constant copies a same-named constant of another class (#562)', () => {
+            const file = phpUnitProject('tests/Unit/SelfReferenceTest.php');
+            const content = `<?php
+namespace Tests\\Unit;
+
+use PHPUnit\\Framework\\Attributes\\DataProvider;
+use PHPUnit\\Framework\\TestCase;
+use Tests\\Support\\Values;
+
+class SelfReferenceTest extends TestCase
+{
+    private const NAME = Values::NAME;
+
+    public static function nameProvider(): array
+    {
+        return ['the name' => [self::NAME]];
+    }
+
+    #[DataProvider('nameProvider')]
+    public function testName(string $name): void
+    {
+        $this->assertSame('abc', $name);
+    }
+}`;
+
+            expect(givenTest(file, content, 'testName')).toEqual(
+                expect.objectContaining({
+                    annotations: {
+                        dataProvider: ['nameProvider'],
+                        dataset: ['data set "the name"'],
+                    },
+                }),
+            );
+        });
+
         it('decodes escape sequences in a double-quoted data set key', () => {
             expect(givenProviderTest('return ["first\\nsecond" => [1]];')).toEqual(
                 expect.objectContaining({
