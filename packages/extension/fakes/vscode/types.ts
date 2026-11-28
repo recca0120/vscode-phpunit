@@ -172,6 +172,8 @@ class FileCoverage {
     constructor(
         public uri: URI,
         public statementCoverage: TestCoverageCount,
+        public branchCoverage?: TestCoverageCount,
+        public declarationCoverage?: TestCoverageCount,
     ) {}
 }
 
@@ -189,8 +191,17 @@ class StatementCoverage {
     ) {}
 }
 
+class DeclarationCoverage {
+    constructor(
+        public name: string,
+        public executed: number | boolean,
+        public location: any,
+    ) {}
+}
+
 export {
     CancellationTokenSource,
+    DeclarationCoverage,
     Disposable,
     DocumentLink,
     EventEmitter,

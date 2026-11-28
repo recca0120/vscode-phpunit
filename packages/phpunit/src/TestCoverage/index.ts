@@ -1,2 +1,2 @@
-export { CloverParser, type FileCoverageData } from './CloverParser';
+export { CloverParser, type FileCoverageData, type MethodCoverage } from './CloverParser';
 export { CoverageFiles } from './CoverageFiles';
