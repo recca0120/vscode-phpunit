@@ -1,5 +1,6 @@
 import { EOL } from '../constants';
 import type { PHPUnitXML } from '../PHPUnitXML/PHPUnitXML';
+import { classifyFailure } from '../TestOutput/classifyFailure';
 import {
     TeamcityEvent,
     type TestConfiguration,
@@ -318,17 +319,7 @@ export class Printer {
     }
 
     private classify(result: TestFailed): ErrorCategory {
-        if (
-            result.message === 'This test did not perform any assertions' &&
-            result.details.length === 0
-        ) {
-            return 'risky';
-        }
-        if (result.message.startsWith('Failed asserting')) {
-            return 'failure';
-        }
-
-        return 'error';
+        return classifyFailure(result);
     }
 
     private formatError(result: TestFailed, index: number) {

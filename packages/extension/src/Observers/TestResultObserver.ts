@@ -1,13 +1,14 @@
-import type {
-    TestDefinition,
-    TestFailed,
-    TestFinished,
-    TestIgnored,
-    TestResult,
-    TestRunnerObserver,
-    TestStarted,
-    TestSuiteFinished,
-    TestSuiteStarted,
+import {
+    classifyFailure,
+    type TestDefinition,
+    type TestFailed,
+    type TestFinished,
+    type TestIgnored,
+    type TestResult,
+    type TestRunnerObserver,
+    type TestStarted,
+    type TestSuiteFinished,
+    type TestSuiteStarted,
 } from '@vscode-phpunit/phpunit';
 import {
     Location,
@@ -59,9 +60,11 @@ export class TestResultObserver implements TestRunnerObserver {
     }
 
     testFailed(result: TestFailed): void {
+        const report =
+            classifyFailure(result) === 'error' ? this.testRun.errored : this.testRun.failed;
         this.doRun(
             result,
-            (test) => this.testRun.failed(test, this.message(result, test), result.duration),
+            (test) => report.call(this.testRun, test, this.message(result, test), result.duration),
             { markAsReported: true },
         );
     }

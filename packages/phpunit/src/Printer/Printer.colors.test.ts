@@ -32,6 +32,23 @@ describe('Printer PRESET_PROGRESS dot colors', () => {
         expect(output).toContain('F');
     });
 
+    it('failed dot F also marks a failed assertion that carries a custom message', () => {
+        const output = printer.testFinished({
+            event: TeamcityEvent.testFailed,
+            name: 'test_failed',
+            locationHint: '',
+            flowId: 1,
+            id: 'Foo::test_failed',
+            file,
+            message: 'Config: missing key\nFailed asserting that false is true.',
+            details: [{ file, line: 27 }],
+            duration: 0,
+        });
+
+        expect(output).toContain('\x1b[41m');
+        expect(output).toContain('F');
+    });
+
     it('ignored dot S uses cyan + bold', () => {
         const output = printer.testIgnored({
             event: TeamcityEvent.testIgnored,
