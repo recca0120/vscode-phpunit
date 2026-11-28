@@ -1,7 +1,9 @@
 import { readFile } from 'node:fs/promises';
-import { XMLParser } from 'fast-xml-parser';
+import { XMLParser, XMLValidator } from 'fast-xml-parser';
 
 const parser = new XMLParser({ ignoreAttributes: false, trimValues: true });
+
+export type XmlError = { message: string; line: number };
 
 export class XmlElement {
     constructor(private readonly node: Record<string, unknown>) {}
@@ -12,6 +14,12 @@ export class XmlElement {
 
     static load(buffer: string | Buffer | Uint8Array) {
         return new XmlElement(parser.parse(buffer.toString()));
+    }
+
+    static validate(buffer: string | Buffer | Uint8Array): XmlError | undefined {
+        const result = XMLValidator.validate(buffer.toString());
+
+        return result === true ? undefined : { message: result.err.msg, line: result.err.line };
     }
 
     getAttribute(key: string): string | undefined {

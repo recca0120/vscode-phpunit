@@ -571,3 +571,38 @@ describe('unload', () => {
         ]);
     });
 });
+
+describe('error', () => {
+    const malformed = `<?xml version="1.0" encoding="UTF-8"?>
+<phpunit>
+    <testsuites>
+        <testsuite name="default">
+            <directory>tests</directory>
+        </testsuite>
+</phpunit>
+`;
+
+    it('reports why a malformed file is not well-formed and on which line', () => {
+        const phpUnitXML = new PHPUnitXML().load(malformed, phpUnitProject('phpunit.xml'));
+
+        expect(phpUnitXML.error()).toEqual({
+            message:
+                "Expected closing tag 'testsuites' (opened in line 3, col 5) instead of closing tag 'phpunit'.",
+            line: 7,
+        });
+    });
+
+    it('reports nothing for a well-formed file', () => {
+        const phpUnitXML = new PHPUnitXML().load(generateXML(''), phpUnitProject('phpunit.xml'));
+
+        expect(phpUnitXML.error()).toBeUndefined();
+    });
+
+    it('forgets the error on unload', () => {
+        const phpUnitXML = new PHPUnitXML().load(malformed, phpUnitProject('phpunit.xml'));
+
+        phpUnitXML.unload();
+
+        expect(phpUnitXML.error()).toBeUndefined();
+    });
+});

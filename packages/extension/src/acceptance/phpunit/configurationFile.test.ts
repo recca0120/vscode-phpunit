@@ -13,12 +13,12 @@ import {
     onTestFinished,
     vi,
 } from 'vitest';
-import { type ExtensionContext, type TestItem, Uri } from 'vscode';
+import { type ExtensionContext, type TestItem, Uri, window } from 'vscode';
 import { createExtensionContext } from '../../../fakes/extensionContext';
 import { fireFileEvent } from '../../../fakes/fileSystemWatchers';
 import { invalidatedResults } from '../../../fakes/invalidatedResults';
 import { openWorkspace } from '../../../fakes/openWorkspace';
-import { allIds, filesOf } from '../../../test-support/testItems';
+import { allIds, filesOf, findItem } from '../../../test-support/testItems';
 import { activateExtension } from '../harness';
 import { stubs } from '../support';
 
@@ -536,6 +536,72 @@ describe('phpunit.xml and the files it points to', () => {
                     expect(passed).toEqual(expect.arrayContaining(['A::It works', 'A::Second']));
                 },
                 { timeout: 10_000 },
+            );
+        });
+    });
+
+    describe('a malformed phpunit.xml', () => {
+        const malformed = `<?xml version="1.0" encoding="UTF-8"?>
+<phpunit>
+    <testsuites>
+        <testsuite name="default">
+            <directory>tests</directory>
+        </testsuite>
+</phpunit>
+`;
+        const reason =
+            "Expected closing tag 'testsuites' (opened in line 3, col 5) instead of closing tag 'phpunit'.";
+
+        const openTwoFolders = async () => {
+            await writeFiles({
+                'a/phpunit.xml': malformed,
+                'a/tests/ATest.php': testCase('ATest'),
+                'b/phpunit.xml': testsuite('tests'),
+                'b/tests/BTest.php': testCase('BTest'),
+            });
+            await openWorkspace(
+                { root: join(tmp, 'a'), name: 'a', settings: { php: 'php' } },
+                { root: join(tmp, 'b'), name: 'b', settings: { php: 'php' } },
+            );
+            const extension = await activateExtension(context);
+            await extension.resolve();
+            const folderOf = (name: string) =>
+                findItem(
+                    extension.controller.items,
+                    `folder:${Uri.file(join(tmp, name)).toString()}`,
+                );
+            return { extension, folderOf };
+        };
+
+        it('shows the XML error on its folder and still lists the tests', async () => {
+            const { extension, folderOf } = await openTwoFolders();
+
+            expect(folderOf('a')?.error).toBe(`${join(tmp, 'a/phpunit.xml')}:7 ${reason}`);
+            expect(folderOf('b')?.error).toBeUndefined();
+            expect(allIds(extension.controller.items)).toEqual(
+                expect.arrayContaining(['A::It works', 'B::It works']),
+            );
+        });
+
+        it('clears the error once phpunit.xml is fixed', async () => {
+            const { folderOf } = await openTwoFolders();
+
+            await changeFile('a/phpunit.xml', testsuite('tests'));
+
+            await vi.waitFor(() => expect(folderOf('a')?.error).toBeUndefined());
+        });
+
+        it('shows the XML error in a message in a single-folder workspace', async () => {
+            await writeFiles({
+                'phpunit.xml': malformed,
+                'tests/ATest.php': testCase('ATest'),
+            });
+            await openWorkspace({ root: tmp, settings: { php: 'php' } });
+            const extension = await activateExtension(context);
+            await extension.resolve();
+
+            expect(window.showErrorMessage).toHaveBeenCalledWith(
+                `PHPUnit: ${join(tmp, 'phpunit.xml')}:7 ${reason}`,
             );
         });
     });
