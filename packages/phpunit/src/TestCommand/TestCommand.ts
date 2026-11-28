@@ -1,8 +1,11 @@
 import type { SpawnOptions } from 'node:child_process';
 import type { IConfiguration } from '../Configuration';
 import type { PathMapper, PathResolver } from '../Path';
+import { CoverageFiles } from '../TestCoverage/CoverageFiles';
+import type { TestDefinition } from '../types';
 import { cloneInstance } from '../utils';
 import { type CommandLauncher, TemplateCommandLauncher } from './CommandLauncher';
+import { FilterStrategyFactory } from './Filter/FilterStrategyFactory';
 import { type Arg, type Invocation, intactArg, pathArg } from './Invocation';
 import type { CommandOption } from './Option/CommandOption';
 import { XdebugCoverage } from './Option/XdebugCoverage';
@@ -30,6 +33,24 @@ export class TestCommand {
             option instanceof XdebugCoverage ? option.withCloverFile(cloverFile) : option,
         );
         return cloned;
+    }
+
+    async forTests(definitions?: TestDefinition[]): Promise<TestCommand[]> {
+        const commands = definitions
+            ? definitions.map((definition) =>
+                  this.withArguments(FilterStrategyFactory.create(definition).filter()),
+              )
+            : [this];
+        if (!this.coverage()?.isEnabled()) {
+            return commands;
+        }
+
+        const coverageFiles = new CoverageFiles(this.getCwd());
+        await coverageFiles.prepare();
+
+        return commands.map((command, index) =>
+            command.withCoverageClover(coverageFiles.allocate(index)),
+        );
     }
 
     debug(): XdebugDebug | undefined {
