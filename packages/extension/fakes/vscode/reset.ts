@@ -1,3 +1,4 @@
+import { commands } from './commands';
 import { debug, startActiveSession } from './debug';
 import { window } from './window';
 import { configurations, workspace } from './workspace';
@@ -14,6 +15,7 @@ const define = (target: object, key: string, value: unknown) =>
 
 export const resetFakeVscode = () => {
     configurations.clear();
+    commands.executed.length = 0;
     define(workspace, 'workspaceFolders', []);
     define(workspace, 'textDocuments', []);
     workspace.createdWatchers.length = 0;

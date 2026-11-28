@@ -2,6 +2,7 @@ import 'reflect-metadata';
 import { initTreeSitter, PHPUnitXML } from '@vscode-phpunit/phpunit';
 import {
     type CancellationToken,
+    commands,
     type Disposable,
     type ExtensionContext,
     extensions,
@@ -164,14 +165,18 @@ function createRunProfiles(ctrl: TestController, dispatcher: TestRunDispatcher) 
         true,
     );
 
+    const profiles = [testRunProfile];
+
     if (extensions.getExtension('xdebug.php-debug') !== undefined) {
-        ctrl.createRunProfile(
-            'Debug Tests',
-            TestRunProfileKind.Debug,
-            runHandler,
-            true,
-            undefined,
-            false,
+        profiles.push(
+            ctrl.createRunProfile(
+                'Debug Tests',
+                TestRunProfileKind.Debug,
+                runHandler,
+                true,
+                undefined,
+                false,
+            ),
         );
     }
 
@@ -183,6 +188,15 @@ function createRunProfiles(ctrl: TestController, dispatcher: TestRunDispatcher) 
         undefined,
         false,
     );
+    profiles.push(coverageProfile);
+    for (const profile of profiles) {
+        profile.configureHandler = () =>
+            commands.executeCommand(
+                'workbench.action.openSettings',
+                '@ext:recca0120.vscode-phpunit',
+            );
+    }
+
     coverageProfile.loadDetailedCoverage = async (_testRun, coverage) => {
         if (coverage instanceof FileCoverageAdapter) {
             return coverage.generateDetailedCoverage();
