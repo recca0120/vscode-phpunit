@@ -160,16 +160,6 @@ class FakeFileSystemWatcher {
         ].fire(uri);
     }
 
-    fireCreate(uri: URI) {
-        this.createEmitter.fire(uri);
-    }
-    fireChange(uri: URI) {
-        this.changeEmitter.fire(uri);
-    }
-    fireDelete(uri: URI) {
-        this.deleteEmitter.fire(uri);
-    }
-
     dispose() {
         this.disposed = true;
         this.createEmitter.dispose();
