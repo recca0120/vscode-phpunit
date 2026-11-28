@@ -3,10 +3,13 @@ import {
     type ConfigurationChangeEvent,
     type TextDocument,
     type TextDocumentChangeEvent,
+    type TextDocumentContentChangeEvent,
+    Uri,
     type WorkspaceFolder,
     type WorkspaceFoldersChangeEvent,
     workspace,
 } from 'vscode';
+import { createTextDocument } from './textDocument';
 
 type Listener<E> = (event: E) => unknown;
 
@@ -57,5 +60,19 @@ export const changeWorkspaceFolders = ({
     return fire<WorkspaceFoldersChangeEvent>(workspace.onDidChangeWorkspaceFolders, {
         added,
         removed,
+    });
+};
+
+export const editTextDocument = (file: string, text: string) => {
+    const document = { ...createTextDocument(text, Uri.file(file)), isDirty: true };
+    const others = workspace.textDocuments.filter(
+        (opened) => opened.uri.toString() !== document.uri.toString(),
+    );
+    Object.defineProperty(workspace, 'textDocuments', { value: [...others, document] });
+
+    return fire<TextDocumentChangeEvent>(workspace.onDidChangeTextDocument, {
+        document,
+        contentChanges: [{ text } as TextDocumentContentChangeEvent],
+        reason: undefined,
     });
 };
