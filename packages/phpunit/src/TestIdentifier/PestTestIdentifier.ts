@@ -31,7 +31,7 @@ export class PestTestIdentifier extends PHPUnitTestIdentifier {
         ].join('::');
     }
 
-    fromLocationHint(locationHint: string, name: string) {
+    fromLocationHint(locationHint: string, name: string, root?: string) {
         const matched = locationHint.match(
             /(pest_qn|file):\/\/(?<id>(?<prefix>[\w\s]+)\((?<classFQN>[\w\\]+)\)(::(?<method>.+))?)/,
         );
@@ -42,7 +42,7 @@ export class PestTestIdentifier extends PHPUnitTestIdentifier {
                 sepIdx === -1
                     ? raw.replace(/\\/g, '/')
                     : raw.slice(0, sepIdx).replace(/\\/g, '/') + raw.slice(sepIdx);
-            const location = PestV1Fixer.normalizeLocationHint(normalized);
+            const location = PestV1Fixer.normalizeLocationHint(normalized, root);
             const id = this.normalizeMethodName(PestV2Fixer.decodeEvaluableId(location, name));
             const file = location.split('::')[0];
 

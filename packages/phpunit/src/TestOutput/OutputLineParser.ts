@@ -15,6 +15,8 @@ import {
 } from './types';
 
 export class OutputLineParser implements LineParser<TestResult | undefined> {
+    constructor(private readonly root?: string) {}
+
     private readonly pattern = /^.*#+teamcity/;
     private readonly filePattern = /(\s+)?(?<file>.+):(?<line>\d+)$/;
     private readonly parsers = [
@@ -90,6 +92,7 @@ export class OutputLineParser implements LineParser<TestResult | undefined> {
         return TestIdentifierFactory.create(argv.locationHint).fromLocationHint(
             argv.locationHint,
             argv.name,
+            this.root,
         );
     }
 }
