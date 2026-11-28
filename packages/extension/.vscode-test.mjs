@@ -258,6 +258,22 @@ if (phpUnitStubs.length > 0) {
 if (phpUnitStubs.length > 0) {
     const stub = phpUnitStubs.at(-1);
     const phpunit = join(fixturesPath, 'phpunit-stub', stub.binary);
+    const root = watchingWorkspace('edit-test-file', {
+        'phpunit.xml': testsuite('tests'),
+        'tests/ATest.php': testCase('ATest'),
+        '.vscode/settings.json': JSON.stringify({ 'phpunit.phpunit': phpunit }),
+    });
+    configs.push({
+        label: 'watching:edit-test-file',
+        files: 'out/tests/suite-watching/editTestFile.test.js',
+        mocha: mochaOpts,
+        launchArgs: [root, '--disable-extensions', ...userDataDirArgs('edit-test-file')],
+    });
+}
+
+if (phpUnitStubs.length > 0) {
+    const stub = phpUnitStubs.at(-1);
+    const phpunit = join(fixturesPath, 'phpunit-stub', stub.binary);
     const scenarios = [
         {
             name: 'relative',

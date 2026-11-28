@@ -19,7 +19,12 @@ import {
 } from 'vscode';
 import { Configuration } from './Configuration';
 import { ObserverFactory } from './Observers';
-import { TestFileDiscovery, TestFileWatcher, TestWatchManager } from './TestDiscovery';
+import {
+    readEditorText,
+    TestFileDiscovery,
+    TestFileWatcher,
+    TestWatchManager,
+} from './TestDiscovery';
 import {
     DebugSessionManager,
     TestCommandFactory,
@@ -83,7 +88,7 @@ function createChildContainer(parent: Container, workspaceFolder: WorkspaceFolde
                 new TreeSitterAstParser(),
                 new PhpParserAstParser(),
             ]);
-            return new TestParser(phpUnitXML, astParser);
+            return new TestParser(phpUnitXML, astParser, readEditorText);
         })
         .inSingletonScope();
 

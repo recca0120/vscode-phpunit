@@ -114,10 +114,14 @@ async function addOpenDocuments(folderManager: WorkspaceFolderManager): Promise<
     );
 }
 
+const TYPING_PAUSE_MS = 300;
+
 function registerDocumentListeners(
     context: ExtensionContext,
     folderManager: WorkspaceFolderManager,
 ): void {
+    const typingTimers = new Map<string, ReturnType<typeof setTimeout>>();
+
     context.subscriptions.push(
         workspace.onDidOpenTextDocument((document) => {
             const container = folderManager.getByUri(document.uri);
@@ -126,11 +130,20 @@ function registerDocumentListeners(
             }
         }),
         workspace.onDidChangeTextDocument((e) => {
-            const container = folderManager.getByUri(e.document.uri);
-            if (container) {
-                container.get(TestTree).update(e.document.uri);
+            if (e.contentChanges.length === 0) {
+                return;
             }
+            const { uri } = e.document;
+            clearTimeout(typingTimers.get(uri.toString()));
+            typingTimers.set(
+                uri.toString(),
+                setTimeout(() => {
+                    typingTimers.delete(uri.toString());
+                    folderManager.getByUri(uri)?.get(TestTree).update(uri);
+                }, TYPING_PAUSE_MS),
+            );
         }),
+        { dispose: () => typingTimers.forEach(clearTimeout) },
     );
 }
 
