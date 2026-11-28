@@ -14,7 +14,15 @@ import {
 } from '@vscode-phpunit/phpunit';
 import { generateXML, phpUnitProject } from '@vscode-phpunit/phpunit/testing';
 import { beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
-import { RelativePattern, type TestController, type TestItem, tests, Uri, workspace } from 'vscode';
+import {
+    RelativePattern,
+    type TestController,
+    type TestItem,
+    TestRunRequest,
+    tests,
+    Uri,
+    workspace,
+} from 'vscode';
 import { URI } from 'vscode-uri';
 import { allIds, collectIds, filesOf, toTree } from '../../test-support/testItems';
 import { icon } from './TestHierarchyBuilder';
@@ -707,7 +715,7 @@ class ExtendsPlainBaseTest extends PlainBase
             const testItem = {
                 id: 'Assertions (Tests\\Assertions)::Passed',
             } as import('vscode').TestItem;
-            const request = { include: [testItem] } as unknown as import('vscode').TestRunRequest;
+            const request = new TestRunRequest([testItem]);
             const result = testTree.itemsOf(request);
 
             expect(result).toHaveLength(1);
@@ -724,9 +732,9 @@ class ExtendsPlainBaseTest extends PlainBase
 
             await testTree.add(URI.file(phpUnitProject('tests/AssertionsTest.php')));
 
-            const request = {
-                include: [{ id: 'nonexistent' } as import('vscode').TestItem],
-            } as unknown as import('vscode').TestRunRequest;
+            const request = new TestRunRequest([
+                { id: 'nonexistent' } as import('vscode').TestItem,
+            ]);
             expect(testTree.itemsOf(request)).toBeUndefined();
         });
 
@@ -739,11 +747,7 @@ class ExtendsPlainBaseTest extends PlainBase
                 </testsuites>`);
 
             expect(testTree.itemsOf(undefined)).toBeUndefined();
-            expect(
-                testTree.itemsOf({
-                    include: undefined,
-                } as unknown as import('vscode').TestRunRequest),
-            ).toBeUndefined();
+            expect(testTree.itemsOf(new TestRunRequest(undefined))).toBeUndefined();
         });
 
         it('group index should update when tests are re-parsed', async () => {

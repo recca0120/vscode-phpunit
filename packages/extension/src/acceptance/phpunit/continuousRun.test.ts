@@ -2,14 +2,13 @@ import { spawn } from 'node:child_process';
 import { initTreeSitter } from '@vscode-phpunit/phpunit';
 import { phpUnitProject } from '@vscode-phpunit/phpunit/testing';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
-import { CancellationTokenSource, type ExtensionContext, Uri, workspace } from 'vscode';
+import { CancellationTokenSource, type ExtensionContext, Uri } from 'vscode';
 import { createExtensionContext } from '../../../fakes/extensionContext';
+import { fireFileEvent } from '../../../fakes/fileSystemWatchers';
 import { openWorkspace } from '../../../fakes/openWorkspace';
 import { findItem } from '../../../test-support/testItems';
 import { activateExtension, type Extension } from '../harness';
 import { stubs } from '../support';
-
-type FakeWatcher = { fireChange: (uri: Uri) => void; pattern: { pattern: string } };
 
 describe.each(stubs.phpUnit)('PHPUnit $name ($phpUnitVersion)', ({ root, binary, args }) => {
     let context: ExtensionContext;
@@ -23,19 +22,9 @@ describe.each(stubs.phpUnit)('PHPUnit $name ($phpUnitVersion)', ({ root, binary,
     afterEach(() => vi.clearAllMocks());
 
     const activateAndResolve = async () => {
-        const watchers = (workspace as unknown as { createdWatchers: FakeWatcher[] })
-            .createdWatchers;
-        const before = watchers.length;
         const extension = await activateExtension(context);
         await extension.resolve();
-        const testWatchers = watchers
-            .slice(before)
-            .filter(({ pattern }) => !pattern.pattern.includes('.xml'));
-        const changeFile = (file: string) => {
-            for (const watcher of testWatchers) {
-                watcher.fireChange(Uri.file(phpUnitProject(file)));
-            }
-        };
+        const changeFile = (file: string) => fireFileEvent('change', phpUnitProject(file));
         return { extension, changeFile };
     };
 

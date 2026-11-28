@@ -1,9 +1,9 @@
-import { join, relative, sep } from 'node:path';
+import { join } from 'node:path';
 import { initTreeSitter, TestType } from '@vscode-phpunit/phpunit';
-import { minimatch } from 'minimatch';
-import { afterEach, beforeAll, beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
-import { type ExtensionContext, workspace } from 'vscode';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { ExtensionContext } from 'vscode';
 import { createExtensionContext } from '../../../fakes/extensionContext';
+import { isWatched } from '../../../fakes/fileSystemWatchers';
 import { openWorkspace } from '../../../fakes/openWorkspace';
 import { childLabels } from '../../../test-support/testItems';
 import { icon } from '../../TestTree/TestHierarchyBuilder';
@@ -57,15 +57,7 @@ describe.each(stubs.pest)('Pest $name ($pestVersion)', ({ root, binary, args }) 
             await extension.resolve();
             const supportFile = join(root, 'tests/Support/AbstractSharedTestCase.php');
 
-            const watched = (workspace.createFileSystemWatcher as Mock).mock.results.some(
-                ({ value }) => {
-                    const { base, pattern } = value.pattern as {
-                        base: string;
-                        pattern: string;
-                    };
-                    return minimatch(relative(base, supportFile).split(sep).join('/'), pattern);
-                },
-            );
+            const watched = isWatched(supportFile);
 
             expect(watched).toBe(true);
         });
@@ -75,15 +67,7 @@ describe.each(stubs.pest)('Pest $name ($pestVersion)', ({ root, binary, args }) 
             await extension.resolve();
             const composerJson = join(root, 'composer.json');
 
-            const watched = (workspace.createFileSystemWatcher as Mock).mock.results.some(
-                ({ value }) => {
-                    const { base, pattern } = value.pattern as {
-                        base: string;
-                        pattern: string;
-                    };
-                    return minimatch(relative(base, composerJson).split(sep).join('/'), pattern);
-                },
-            );
+            const watched = isWatched(composerJson);
 
             expect(watched).toBe(true);
         });

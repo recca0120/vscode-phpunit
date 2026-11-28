@@ -2,8 +2,9 @@ import { spawn } from 'node:child_process';
 import { CloverParser, initTreeSitter } from '@vscode-phpunit/phpunit';
 import { phpUnitProject } from '@vscode-phpunit/phpunit/testing';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
-import { commands, type ExtensionContext, TestRunProfileKind, Uri, workspace } from 'vscode';
+import { commands, type ExtensionContext, TestRunProfileKind, Uri } from 'vscode';
 import { createExtensionContext } from '../../../fakes/extensionContext';
+import { fireFileEvent } from '../../../fakes/fileSystemWatchers';
 import { openWorkspace, setActiveTextEditor } from '../../../fakes/openWorkspace';
 import { expectSpawned } from '../../../test-support/process';
 import { findItem } from '../../../test-support/testItems';
@@ -48,19 +49,9 @@ describe.each(stubs.phpUnit)('PHPUnit $name ($phpUnitVersion)', ({ root, binary,
         });
 
         it('a continuous run does not replace the request to rerun', async () => {
-            type FakeWatcher = {
-                fireChange: (uri: Uri) => void;
-                pattern: { pattern: string };
-            };
-            const watchers = (workspace as unknown as { createdWatchers: FakeWatcher[] })
-                .createdWatchers;
             const extension = await activateExtension(context);
             const { controller } = extension;
-            const before = watchers.length;
             await extension.resolve();
-            const testWatchers = watchers
-                .slice(before)
-                .filter(({ pattern }) => !pattern.pattern.includes('.xml'));
             setActiveTextEditor(phpUnitProject('tests/AssertionsTest.php'), {
                 line: 17,
                 character: 14,
@@ -69,9 +60,7 @@ describe.each(stubs.phpUnit)('PHPUnit $name ($phpUnitVersion)', ({ root, binary,
             const calculator = findItem(controller.items, 'Calculator (Tests\\Calculator)');
             await extension.run([calculator], { continuous: true });
             vi.mocked(spawn).mockClear();
-            for (const watcher of testWatchers) {
-                watcher.fireChange(Uri.file(phpUnitProject('tests/CalculatorTest.php')));
-            }
+            fireFileEvent('change', phpUnitProject('tests/CalculatorTest.php'));
             await vi.waitFor(
                 () => {
                     const testRuns = (controller.createTestRun as Mock).mock.results;
