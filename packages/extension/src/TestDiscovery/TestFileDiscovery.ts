@@ -78,10 +78,15 @@ export class TestFileDiscovery {
     }
 
     async reloadAll(): Promise<void> {
-        this.invalidateCache();
-        this.testTree.clear();
-        const { pattern, exclude } = await this.getWorkspaceTestPattern();
-        await this.discoverTestFiles(pattern, exclude);
+        this.testTree.markBusy(true);
+        try {
+            this.invalidateCache();
+            this.testTree.clear();
+            const { pattern, exclude } = await this.getWorkspaceTestPattern();
+            await this.discoverTestFiles(pattern, exclude);
+        } finally {
+            this.testTree.markBusy(false);
+        }
     }
 
     async discoverTestFiles(pattern: GlobPattern, exclude: GlobPattern): Promise<void> {

@@ -1,7 +1,8 @@
 import { type ChildProcess, type SpawnOptions, spawn } from 'node:child_process';
 import { initTreeSitter, TestType } from '@vscode-phpunit/phpunit';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import { commands, type ExtensionContext, TestRunProfileKind, Uri } from 'vscode';
+import { commands, type ExtensionContext, type TestItem, TestRunProfileKind, Uri } from 'vscode';
+import { busyChangesOf } from '../../fakes/busyChanges';
 import { startOneDebugSessionPerFolder, stoppedDebugSessions } from '../../fakes/debugSessions';
 import { createExtensionContext } from '../../fakes/extensionContext';
 import { openWorkspace } from '../../fakes/openWorkspace';
@@ -73,6 +74,22 @@ describe('multi-root workspace (PHPUnit + Pest)', {
             : undefined;
         expect(pestItem).toBeDefined();
         expect(pestItem?.label).toContain('test_description');
+    });
+
+    it('marks each folder busy while its tests are reloaded', async () => {
+        const extension = await activateExtension(context);
+        const { controller } = extension;
+        const folders = [phpUnitStub.root, pestStub.root].map((root) =>
+            findItem(controller.items, `folder:${Uri.file(root).toString()}`),
+        );
+        if (folders.some((folder) => !folder)) throw new Error('folder item not found');
+        for (const folder of folders) busyChangesOf(folder as TestItem).length = 0;
+
+        await extension.command('phpunit.reload');
+
+        for (const folder of folders) {
+            expect(busyChangesOf(folder as TestItem)).toEqual([true, false]);
+        }
     });
 
     it('runs a PHPUnit test in its own folder', async () => {

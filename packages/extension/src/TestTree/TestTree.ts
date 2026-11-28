@@ -25,6 +25,7 @@ import { TestItemRegistry } from './TestItemRegistry';
 export class TestTree {
     private readonly registry = new TestItemRegistry();
     private _rootItems: TestItemCollection | undefined;
+    private folderItem?: TestItem;
 
     constructor(
         @inject(TYPES.TestController) private ctrl: TestController,
@@ -50,6 +51,7 @@ export class TestTree {
         folderItem.sortText = String(folder.index).padStart(5, '0');
         folderItem.canResolveChildren = true;
         this._rootItems = folderItem.children;
+        this.folderItem = folderItem;
         this.registry.register(folderItem.uri?.toString() ?? folderItem.id, folderItem, {
             type: TestType.workspace,
             id,
@@ -57,6 +59,12 @@ export class TestTree {
         });
 
         return folderItem;
+    }
+
+    markBusy(busy: boolean): void {
+        if (this.folderItem) {
+            this.folderItem.busy = busy;
+        }
     }
 
     definitionOf(testItem: TestItem): TestDefinition | undefined {
