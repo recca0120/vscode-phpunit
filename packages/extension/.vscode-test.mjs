@@ -1,5 +1,5 @@
 import { execSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { platform, tmpdir } from 'node:os';
 import { basename, dirname, join, resolve } from 'node:path';
 import { defineConfig } from '@vscode/test-cli';
@@ -22,7 +22,10 @@ function temporaryWorkspace(source) {
         ...folder,
         path: resolve(dirname(source), folder.path),
     }));
-    const target = join(mkdtempSync(join(tmpdir(), 'vsc-e2e-workspace-')), basename(source));
+    const directory = join(e2eBase, 'workspaces', basename(source, '.code-workspace'));
+    rmSync(directory, { recursive: true, force: true });
+    mkdirSync(directory, { recursive: true });
+    const target = join(directory, basename(source));
     writeFileSync(target, JSON.stringify(workspace, null, 4));
 
     return target;
