@@ -55,14 +55,12 @@ export class TestFileWatcher {
 
         const { pattern } = await this.testFileDiscovery.getWorkspaceTestPattern();
         const watcher = workspace.createFileSystemWatcher(pattern);
-        watcher.onDidCreate(async (uri) => {
-            await this.testTree.add(uri);
+        const reparse = async (uri: Uri) => {
+            await this.testTree.update(uri);
             this.fileChangedEmitter.fire(uri);
-        });
-        watcher.onDidChange((uri) => {
-            this.testTree.update(uri);
-            this.fileChangedEmitter.fire(uri);
-        });
+        };
+        watcher.onDidCreate(reparse);
+        watcher.onDidChange(reparse);
         watcher.onDidDelete((uri) => {
             this.testTree.remove(uri);
         });
