@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { dirname, isAbsolute, join, normalize, relative, resolve } from 'node:path';
-import { XmlElement } from '../Xml/XmlElement';
+import { XmlElement, type XmlError } from '../Xml/XmlElement';
 import { TestGlobPattern } from './TestGlobPattern';
 
 export { TestGlobPattern };
@@ -16,6 +16,7 @@ const isInsideDirectory = (directory: string, path: string) => {
 
 export class PHPUnitXML {
     private element?: XmlElement;
+    private _error?: XmlError;
     private _file: string = '';
     private _configRoot: string = '';
     private _root: string = '';
@@ -23,6 +24,7 @@ export class PHPUnitXML {
 
     load(text: string | Buffer | Uint8Array, file: string) {
         this.element = XmlElement.load(text.toString());
+        this._error = XmlElement.validate(text);
         this._file = file;
         this.setRoot(dirname(file));
         this._root = this.resolveProjectRoot();
@@ -38,6 +40,7 @@ export class PHPUnitXML {
 
     unload() {
         this.element = undefined;
+        this._error = undefined;
         this._file = '';
 
         return this;
@@ -53,6 +56,10 @@ export class PHPUnitXML {
 
     file() {
         return this._file;
+    }
+
+    error() {
+        return this._error;
     }
 
     root() {

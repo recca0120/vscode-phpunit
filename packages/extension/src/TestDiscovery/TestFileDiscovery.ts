@@ -6,7 +6,7 @@ import {
     VAR_WORKSPACE_FOLDER,
 } from '@vscode-phpunit/phpunit';
 import { inject, injectable } from 'inversify';
-import { type GlobPattern, RelativePattern, type WorkspaceFolder, workspace } from 'vscode';
+import { type GlobPattern, RelativePattern, type WorkspaceFolder, window, workspace } from 'vscode';
 import { URI } from 'vscode-uri';
 import { Configuration } from '../Configuration';
 import { TestTree } from '../TestTree';
@@ -154,7 +154,16 @@ export class TestFileDiscovery {
         } else {
             this.phpUnitXML.unload().setRoot(this.workspaceFolder.uri.fsPath);
         }
+        this.reportConfigurationError(configurationFile);
 
         this.loaded = true;
+    }
+
+    private reportConfigurationError(configurationFile: string | undefined): void {
+        const error = this.phpUnitXML.error();
+        const message = error ? `${configurationFile}:${error.line} ${error.message}` : undefined;
+        if (!this.testTree.markError(message) && message) {
+            window.showErrorMessage(`PHPUnit: ${message}`);
+        }
     }
 }

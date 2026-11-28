@@ -61,6 +61,15 @@ export class TestTree {
         return folderItem;
     }
 
+    markError(message: string | undefined): boolean {
+        if (!this.folderItem) {
+            return false;
+        }
+        this.folderItem.error = message;
+
+        return true;
+    }
+
     markBusy(busy: boolean): void {
         if (this.folderItem) {
             this.folderItem.busy = busy;
