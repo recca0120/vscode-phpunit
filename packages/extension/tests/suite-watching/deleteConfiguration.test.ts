@@ -12,6 +12,7 @@ suite('deleting phpunit.xml', () => {
         const ids = () => collectTestItemIds(ctrl.items).sort();
         await waitUntil(() => ids().length > 0, 'the tests are listed', 15_000);
         assert.deepStrictEqual(ids(), ['A', 'A::It works']);
+        await new Promise((resolve) => setTimeout(resolve, 3000));
 
         await unlink(join(root, 'phpunit.xml'));
 
