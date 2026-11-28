@@ -36,13 +36,13 @@ export const activateAndRun = async (
 };
 
 export const expectTestResultCalled = (extension: Extension, expected: Record<string, number>) => {
-    const { enqueued, started, passed, failed, end } = vi.mocked(extension.testRuns()[0]);
+    const { enqueued, started, passed, failed, errored, end } = vi.mocked(extension.testRuns()[0]);
 
     expect({
         enqueued: enqueued.mock.calls.length,
         started: started.mock.calls.length,
         passed: passed.mock.calls.length,
-        failed: failed.mock.calls.length,
+        failed: failed.mock.calls.length + errored.mock.calls.length,
         end: end.mock.calls.length,
     }).toEqual(expected);
 
