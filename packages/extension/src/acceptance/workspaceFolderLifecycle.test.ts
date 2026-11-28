@@ -2,12 +2,15 @@ import { initTreeSitter } from '@vscode-phpunit/phpunit';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 import { commands, type ExtensionContext, Uri, type WorkspaceFolder, workspace } from 'vscode';
 import { createExtensionContext } from '../../fakes/extensionContext';
+import {
+    fileSystemWatchers,
+    maxConcurrentFindFiles,
+    resetFindFilesConcurrency,
+} from '../../fakes/fileSystemWatchers';
 import { openWorkspace } from '../../fakes/openWorkspace';
-import { changeWorkspaceFolders } from '../../fakes/vscodeEvents';
+import { changeWorkspaceFolders, workspaceFoldersListener } from '../../fakes/vscodeEvents';
 import { activateExtension } from './harness';
 import { stubs } from './support';
-
-type FakeFileSystemWatcher = { disposed: boolean };
 
 let context: ExtensionContext;
 
@@ -65,9 +68,7 @@ describe('workspace folder lifecycle', {
 
         await extension.resolve();
 
-        const firstWatchers = (workspace.createFileSystemWatcher as Mock).mock.results.map(
-            (r) => r.value as FakeFileSystemWatcher,
-        );
+        const firstWatchers = fileSystemWatchers();
 
         await extension.resolve();
 
@@ -100,24 +101,10 @@ describe('workspace folder lifecycle', {
         await pestConfig.update('phpunit', pestStub.binary);
         await pestConfig.update('args', pestStub.args);
 
-        const onFolderChange = workspace.onDidChangeWorkspaceFolders as Mock;
-        const listenerCall = onFolderChange.mock.calls.find(
-            (call: unknown[]) => typeof call[0] === 'function',
-        );
-        expect(listenerCall).toBeDefined();
+        const listener = workspaceFoldersListener();
+        expect(listener).toBeDefined();
 
-        (
-            workspace.findFiles as unknown as {
-                _maxConcurrent: number;
-                _concurrentCount: number;
-            }
-        )._maxConcurrent = 0;
-        (
-            workspace.findFiles as unknown as {
-                _maxConcurrent: number;
-                _concurrentCount: number;
-            }
-        )._concurrentCount = 0;
+        resetFindFilesConcurrency();
 
         await changeWorkspaceFolders({ added: [pestFolder] });
 
@@ -125,9 +112,7 @@ describe('workspace folder lifecycle', {
 
         await commands.executeCommand('phpunit.reload');
 
-        expect(
-            (workspace.findFiles as unknown as { _maxConcurrent: number })._maxConcurrent,
-        ).toBeLessThanOrEqual(2);
+        expect(maxConcurrentFindFiles()).toBeLessThanOrEqual(2);
     });
 
     it('resolving creates file system watchers', async () => {
@@ -162,9 +147,7 @@ describe('workspace folder lifecycle', {
         const p2 = extension.resolve();
         await Promise.all([p1, p2]);
 
-        const allWatchers = (workspace.createFileSystemWatcher as Mock).mock.results.map(
-            (r) => r.value as FakeFileSystemWatcher,
-        );
+        const allWatchers = fileSystemWatchers();
 
         const undisposed = allWatchers.filter((w) => !w.disposed);
         expect(undisposed.length).toBe(2);

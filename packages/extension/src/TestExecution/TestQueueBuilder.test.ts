@@ -42,9 +42,7 @@ describe('TestQueueBuilder', () => {
         await testTree.add(URI.file(phpUnitProject('tests/AssertionsTest.php')));
 
         const testRun = ctrl.createTestRun(new TestRunRequest());
-        const request = {
-            include: childrenOf(ctrl.items),
-        } as unknown as import('vscode').TestRunRequest;
+        const request = new TestRunRequest(childrenOf(ctrl.items));
         const queue = await builder.build(request.include ?? [], request, undefined, testRun);
 
         expect(queue.size).toBeGreaterThan(0);
@@ -57,9 +55,7 @@ describe('TestQueueBuilder', () => {
     it('should work without testRun (backward compatible)', async () => {
         await testTree.add(URI.file(phpUnitProject('tests/AssertionsTest.php')));
 
-        const request = {
-            include: childrenOf(ctrl.items),
-        } as unknown as import('vscode').TestRunRequest;
+        const request = new TestRunRequest(childrenOf(ctrl.items));
         const queue = await builder.build(request.include ?? [], request);
 
         expect(queue.size).toBeGreaterThan(0);
@@ -69,7 +65,7 @@ describe('TestQueueBuilder', () => {
         await testTree.add(URI.file(phpUnitProject('tests/AssertionsTest.php')));
 
         const testRun = ctrl.createTestRun(new TestRunRequest());
-        const request = {} as unknown as import('vscode').TestRunRequest;
+        const request = new TestRunRequest();
         const queue = await builder.buildFromCollection(ctrl.items, request, testRun);
 
         expect(queue.size).toBeGreaterThan(0);
@@ -97,7 +93,7 @@ describe('TestQueueBuilder', () => {
 
         const testRun = ctrl.createTestRun(new TestRunRequest());
         const include = [methodItem];
-        const request = { include } as unknown as import('vscode').TestRunRequest;
+        const request = new TestRunRequest(include);
         const queue = await builder.build(include, request, undefined, testRun);
 
         const types = [...queue.keys()].map((def) => def.type);
@@ -120,10 +116,7 @@ describe('TestQueueBuilder', () => {
         const excluded = methods[0];
 
         const testRun = ctrl.createTestRun(new TestRunRequest());
-        const request = {
-            include: allItems,
-            exclude: [excluded],
-        } as unknown as import('vscode').TestRunRequest;
+        const request = new TestRunRequest(allItems, [excluded]);
         const queue = await builder.build(request.include ?? [], request, undefined, testRun);
 
         const queueIds = [...queue.values()].map((item) => item.id);

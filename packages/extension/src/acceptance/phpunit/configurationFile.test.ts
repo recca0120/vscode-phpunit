@@ -3,14 +3,13 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { initTreeSitter, VAR_WORKSPACE_FOLDER } from '@vscode-phpunit/phpunit';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
-import { type ExtensionContext, type TestItem, Uri, workspace } from 'vscode';
+import type { ExtensionContext, TestItem } from 'vscode';
 import { createExtensionContext } from '../../../fakes/extensionContext';
+import { fireFileEvent } from '../../../fakes/fileSystemWatchers';
 import { openWorkspace } from '../../../fakes/openWorkspace';
 import { allIds, filesOf } from '../../../test-support/testItems';
 import { activateExtension } from '../harness';
 import { stubs } from '../support';
-
-type FileEvents = { fireFileEvent: (event: 'create' | 'change' | 'delete', uri: Uri) => void };
 
 const testsuite = (directory: string) => `<?xml version="1.0" encoding="UTF-8"?>
 <phpunit>
@@ -118,22 +117,19 @@ describe('phpunit.xml and the files it points to', () => {
         }
     };
 
-    const fireFileEvent = (event: 'create' | 'change' | 'delete', file: string) =>
-        (workspace as unknown as FileEvents).fireFileEvent(event, Uri.file(join(tmp, file)));
-
     const createFile = async (file: string, content: string) => {
         await writeFiles({ [file]: content });
-        fireFileEvent('create', file);
+        fireFileEvent('create', join(tmp, file));
     };
 
     const changeFile = async (file: string, content: string) => {
         await writeFile(join(tmp, file), content);
-        fireFileEvent('change', file);
+        fireFileEvent('change', join(tmp, file));
     };
 
     const deleteFile = async (file: string) => {
         await unlink(join(tmp, file));
-        fireFileEvent('delete', file);
+        fireFileEvent('delete', join(tmp, file));
     };
 
     beforeAll(async () => initTreeSitter());

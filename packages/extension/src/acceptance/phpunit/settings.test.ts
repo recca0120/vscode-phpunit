@@ -1,8 +1,9 @@
 import { initTreeSitter } from '@vscode-phpunit/phpunit';
-import { afterEach, beforeAll, beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
-import { type ExtensionContext, workspace } from 'vscode';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { ExtensionContext } from 'vscode';
 import { createExtensionContext } from '../../../fakes/extensionContext';
 import { openWorkspace } from '../../../fakes/openWorkspace';
+import { configurationListener } from '../../../fakes/vscodeEvents';
 import { Configuration } from '../../Configuration';
 import { activateExtension } from '../harness';
 import { stubs } from '../support';
@@ -22,12 +23,8 @@ describe.each(stubs.phpUnit)('PHPUnit $name ($phpUnitVersion)', ({ root, binary,
         it('reloads the configuration only when a phpunit setting changes', async () => {
             const _ext = await activateExtension(context);
 
-            const onDidChangeConfig = workspace.onDidChangeConfiguration as Mock;
-            const listenerCall = onDidChangeConfig.mock.calls.find(
-                (call: unknown[]) => typeof call[0] === 'function',
-            );
-            expect(listenerCall).toBeDefined();
-            const listener = listenerCall?.[0];
+            const listener = configurationListener();
+            expect(listener).toBeDefined();
 
             const spy = vi.spyOn(Configuration.prototype, 'updateWorkspaceConfiguration');
 

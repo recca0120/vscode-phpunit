@@ -19,6 +19,12 @@ const fire = async <E>(event: unknown, payload: E) => {
     await Promise.all(listenersOf<E>(event).map((listener) => listener(payload)));
 };
 
+export const configurationListener = () =>
+    listenersOf<ConfigurationChangeEvent>(workspace.onDidChangeConfiguration)[0];
+
+export const workspaceFoldersListener = () =>
+    listenersOf<WorkspaceFoldersChangeEvent>(workspace.onDidChangeWorkspaceFolders)[0];
+
 export const openTextDocument = (document: TextDocument) =>
     fire<TextDocument>(workspace.onDidOpenTextDocument, document);
 
